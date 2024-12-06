@@ -158,31 +158,47 @@
                 e.preventDefault();
                 console.log('Form submission started'); // Debug log
                 
+                // Get form elements
+                const customerName = form.querySelector('[name="customerName"]');
+                const customerEmail = form.querySelector('[name="email"]');
+                const customerPhone = form.querySelector('[name="phone"]');
+                const customerAddress = form.querySelector('[name="address"]');
+                const notesField = form.querySelector('[name="notes"]');
+                
                 const formData = {
                     customer: {
-                        name: form.customerName.value,
-                        email: form.email.value,
-                        phone: form.phone.value,
-                        address: form.address.value
+                        name: customerName ? customerName.value : '',
+                        email: customerEmail ? customerEmail.value : '',
+                        phone: customerPhone ? customerPhone.value : '',
+                        address: customerAddress ? customerAddress.value : ''
                     },
                     items: [],
-                    notes: form.notes.value
+                    notes: notesField ? notesField.value : ''
                 };
                 
                 // Gather selected items
-                document.querySelectorAll('[data-base-price]').forEach(item => {
-                    const quantity = parseInt(item.parentElement.querySelector('.quantity-input').value) || 0;
-                    if (quantity > 0) {
-                        formData.items.push({
-                            name: item.parentElement.querySelector('div').textContent.trim(),
-                            basePrice: parseFloat(item.dataset.basePrice),
-                            markup: parseFloat(item.value) || 0,
-                            quantity: quantity
-                        });
+                document.querySelectorAll('.markup-input').forEach(item => {
+                    const row = item.closest('.grid');
+                    if (row) {
+                        const quantity = parseInt(row.querySelector('.quantity-input')?.value) || 0;
+                        if (quantity > 0) {
+                            const nameElement = row.querySelector('.col-span-2');
+                            formData.items.push({
+                                name: nameElement ? nameElement.textContent.trim() : 'Unknown Item',
+                                basePrice: parseFloat(item.dataset.basePrice) || 0,
+                                markup: parseFloat(item.value) || 0,
+                                quantity: quantity
+                            });
+                        }
                     }
                 });
                 
                 console.log('Form data prepared:', formData); // Debug log
+                
+                if (formData.items.length === 0) {
+                    alert('Please select at least one item with a quantity greater than 0');
+                    return;
+                }
                 
                 try {
                     console.log('Sending request to /generate-quote'); // Debug log
