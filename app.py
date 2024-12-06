@@ -23,20 +23,39 @@ def index():
 @app.route('/generate-quote', methods=['POST'])
 def generate_quote():
     try:
+        print("Starting quote generation...")  # Debug log
+        
+        # Ensure the request has JSON data
+        if not request.is_json:
+            print("Error: Request does not contain JSON data")
+            return jsonify({
+                'success': False,
+                'error': 'Request must be JSON'
+            }), 400
+            
         data = request.json
+        print(f"Received data: {data}")  # Debug log
+        
+        # Create storage directories if they don't exist
+        os.makedirs(os.path.join(STORAGE_PATH, 'pdfs'), exist_ok=True)
+        os.makedirs(os.path.join(STORAGE_PATH, 'orders'), exist_ok=True)
         
         # Save order to JSON file
         order_id = save_order(data)
+        print(f"Order saved with ID: {order_id}")  # Debug log
         
         # Generate PDF
         pdf_path = generate_pdf(order_id, data)
+        print(f"PDF generated at: {pdf_path}")  # Debug log
         
         if os.path.exists(pdf_path):
             return jsonify({
                 'success': True,
-                'order_id': order_id
+                'order_id': order_id,
+                'message': 'PDF generated successfully'
             })
         else:
+            print("Error: PDF file not created")
             return jsonify({
                 'success': False,
                 'error': 'PDF generation failed'
@@ -50,10 +69,6 @@ def generate_quote():
         }), 500
 
 def save_order(data):
-    # Create orders and pdfs directories if they don't exist
-    os.makedirs(os.path.join(STORAGE_PATH, 'pdfs'), exist_ok=True)
-    os.makedirs(os.path.join(STORAGE_PATH, 'orders'), exist_ok=True)
-    
     # Generate unique order ID
     order_id = datetime.now().strftime('%Y%m%d_%H%M%S')
     
@@ -138,7 +153,7 @@ def generate_pdf(order_id, data):
         </html>
         """
         
-        # Generate PDF with configuration and save to storage path
+        # Generate PDF with configuration
         pdf_path = os.path.join(STORAGE_PATH, 'pdfs', f'order_{order_id}.pdf')
         pdfkit.from_string(
             html_content, 
