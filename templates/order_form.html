@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Hub Modification Order Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-6">
+    <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">Box Hub Modification Order Form</h1>
+        
+        <form id="orderForm" class="space-y-6">
+            <!-- Customer Information -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Customer Name</label>
+                    <input type="text" name="customerName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input type="email" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" name="phone" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
+                    <textarea name="address" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+            </div>
+
+            <!-- Global Markup -->
+            <div class="bg-gray-100 p-4 rounded">
+                <label class="block text-sm font-medium text-gray-700">Global Markup Percentage</label>
+                <div class="flex items-center space-x-2">
+                    <input type="number" id="globalMarkup" class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm" min="0" value="0">
+                    <button type="button" id="applyMarkup" class="bg-blue-500 text-white px-4 py-2 rounded">Apply to All Items</button>
+                </div>
+            </div>
+
+            <!-- Product Categories -->
+            {% for category, items in catalog.items() %}
+            <div class="border rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
+                <!-- Column Headers -->
+                <div class="grid grid-cols-5 gap-4 mb-2 font-medium text-sm text-gray-600">
+                    <div class="col-span-2">Item</div>
+                    <div>Base Price</div>
+                    <div>Markup %</div>
+                    <div>Quantity</div>
+                </div>
+                <div class="space-y-4">
+                    {% for name, details in items.items() recursive %}
+                    {% if details.price is defined %}
+                    <div class="grid grid-cols-5 gap-4 items-center">
+                        <div class="col-span-2">
+                            {{ name }}
+                            {% if details.description %}
+                            <p class="text-sm text-gray-500">{{ details.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div>${{ details.price }}</div>
+                        <div class="relative">
+                            <input type="number" class="markup-input w-full rounded-md border-gray-300 shadow-sm" 
+                                   data-base-price="{{ details.price }}" 
+                                   min="0" max="100" value="0">
+                        </div>
+                        <div class="relative">
+                            <input type="number" class="quantity-input w-full rounded-md border-gray-300 shadow-sm" 
+                                   min="0" value="0">
+                        </div>
+                        {% if details.options %}
+                        <select class="w-full rounded-md border-gray-300 shadow-sm mt-2">
+                            {% for option in details.options %}
+                            <option value="{{ option }}">{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="space-y-4">
+                        <h3 class="font-medium">{{ name }}</h3>
+                        {{ loop(items[name].items()) }}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Order Summary -->
+            <div class="border rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+                <div class="space-y-2">
+                    <p>Base Total: $<span id="baseTotal">0.00</span></p>
+                    <p>Markup Total: $<span id="markupTotal">0.00</span></p>
+                    <p class="font-bold">Final Total: $<span id="finalTotal">0.00</span></p>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Additional Notes or Requirements</label>
+                <textarea name="notes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+            </div>
+
+            <div class="flex space-x-4">
+                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">Submit Order</button>
+                <div id="downloadContainer"></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('orderForm');
+            const globalMarkupInput = document.getElementById('globalMarkup');
+            const applyMarkupButton = document.getElementById('applyMarkup');
+            
+            // Apply global markup to all items
+            applyMarkupButton.addEventListener('click', function() {
+                const markupValue = globalMarkupInput.value;
+                document.querySelectorAll('.markup-input').forEach(input => {
+                    input.value = markupValue;
+                });
+                updateTotals();
+            });
+            
+            // Update totals when any input changes
+            form.addEventListener('input', updateTotals);
+            
+            function updateTotals() {
+                let baseTotal = 0;
+                let markupTotal = 0;
+                
+                document.querySelectorAll('.markup-input').forEach(markupInput => {
+                    const row = markupInput.closest('.grid');
+                    const basePrice = parseFloat(markupInput.dataset.basePrice);
+                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                    const markup = parseFloat(markupInput.value) || 0;
+                    
+                    const itemBase = basePrice * quantity;
+                    const itemMarkup = itemBase * (markup / 100);
+                    
+                    baseTotal += itemBase;
+                    markupTotal += itemMarkup;
+                });
+                
+                document.getElementById('baseTotal').textContent = baseTotal.toFixed(2);
+                document.getElementById('markupTotal').textContent = markupTotal.toFixed(2);
+                document.getElementById('finalTotal').textContent = (baseTotal + markupTotal).toFixed(2);
+            }
+            
+            // Handle form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    customer: {
+                        name: form.customerName.value,
+                        email: form.email.value,
+                        phone: form.phone.value,
+                        address: form.address.value
+                    },
+                    items: [],
+                    notes: form.notes.value
+                };
+                
+                // Gather selected items
+                document.querySelectorAll('[data-base-price]').forEach(item => {
+                    const quantity = parseInt(item.parentElement.querySelector('.quantity-input').value) || 0;
+                    if (quantity > 0) {
+                        formData.items.push({
+                            name: item.parentElement.querySelector('div').textContent.trim(),
+                            basePrice: parseFloat(item.dataset.basePrice),
+                            markup: parseFloat(item.value) || 0,
+                            quantity: quantity
+                        });
+                    }
+                });
+                
+                try {
+                    const response = await fetch('/generate-quote', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        // Create download button
+                        const downloadContainer = document.getElementById('downloadContainer');
+                        downloadContainer.innerHTML = `
+                            <a href="/download-pdf/${result.order_id}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">
+                                Download PO
+                            </a>
+                        `;
+                        
+                        alert('Order submitted successfully! Click the download button to get your PO.');
+                        form.reset();
+                        updateTotals();
+                    }
+                } catch (error) {
+                    console.error('Error submitting order:', error);
+                    alert('Error submitting order. Please try again.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
