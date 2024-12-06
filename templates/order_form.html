@@ -156,6 +156,7 @@
             // Handle form submission
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                console.log('Form submission started'); // Debug log
                 
                 const formData = {
                     customer: {
@@ -181,7 +182,10 @@
                     }
                 });
                 
+                console.log('Form data prepared:', formData); // Debug log
+                
                 try {
+                    console.log('Sending request to /generate-quote'); // Debug log
                     const response = await fetch('/generate-quote', {
                         method: 'POST',
                         headers: {
@@ -190,7 +194,15 @@
                         body: JSON.stringify(formData)
                     });
                     
+                    console.log('Response received:', response); // Debug log
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
                     const result = await response.json();
+                    console.log('Response data:', result); // Debug log
+                    
                     if (result.success) {
                         // Create download button
                         const downloadContainer = document.getElementById('downloadContainer');
@@ -203,10 +215,12 @@
                         alert('Order submitted successfully! Click the download button to get your PO.');
                         form.reset();
                         updateTotals();
+                    } else {
+                        throw new Error(result.error || 'Unknown error occurred');
                     }
                 } catch (error) {
-                    console.error('Error submitting order:', error);
-                    alert('Error submitting order. Please try again.');
+                    console.error('Full error details:', error); // Enhanced error logging
+                    alert(`Error submitting order: ${error.message}`);
                 }
             });
         });
