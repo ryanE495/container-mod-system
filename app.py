@@ -8,6 +8,8 @@ from products import PRODUCT_CATALOG
 
 load_dotenv()
 
+# Configure storage path for Render
+STORAGE_PATH = '/opt/render/project/src/orders'
 app = Flask(__name__)
 
 # Configure pdfkit for Render environment
@@ -48,14 +50,16 @@ def generate_quote():
         }), 500
 
 def save_order(data):
-    # Create orders directory if it doesn't exist
-    os.makedirs('orders', exist_ok=True)
+    # Create orders and pdfs directories if they don't exist
+    os.makedirs(os.path.join(STORAGE_PATH, 'pdfs'), exist_ok=True)
+    os.makedirs(os.path.join(STORAGE_PATH, 'orders'), exist_ok=True)
     
     # Generate unique order ID
     order_id = datetime.now().strftime('%Y%m%d_%H%M%S')
     
     # Save order data to JSON file
-    with open(f'orders/order_{order_id}.json', 'w') as f:
+    json_path = os.path.join(STORAGE_PATH, 'orders', f'order_{order_id}.json')
+    with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
     
     return order_id
@@ -133,12 +137,9 @@ def generate_pdf(order_id, data):
         </body>
         </html>
         """
-
-        # Ensure pdfs directory exists
-        os.makedirs('pdfs', exist_ok=True)
         
-        # Generate PDF with configuration
-        pdf_path = f'pdfs/order_{order_id}.pdf'
+        # Generate PDF with configuration and save to storage path
+        pdf_path = os.path.join(STORAGE_PATH, 'pdfs', f'order_{order_id}.pdf')
         pdfkit.from_string(
             html_content, 
             pdf_path,
@@ -158,7 +159,7 @@ def generate_pdf(order_id, data):
 @app.route('/download-pdf/<order_id>')
 def download_pdf(order_id):
     try:
-        pdf_path = f'pdfs/order_{order_id}.pdf'
+        pdf_path = os.path.join(STORAGE_PATH, 'pdfs', f'order_{order_id}.pdf')
         if os.path.exists(pdf_path):
             return send_file(
                 pdf_path,
