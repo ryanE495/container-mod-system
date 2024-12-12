@@ -8,9 +8,11 @@ from products import PRODUCT_CATALOG
 
 load_dotenv()
 
+# Configure storage path for Render
 STORAGE_PATH = '/opt/render/project/src/orders'
 app = Flask(__name__)
 
+# Configure pdfkit for Render environment
 WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
 pdfkit_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
 
@@ -63,7 +65,7 @@ def generate_quote():
         }), 500
 
 def save_order(data):
-    order_id = datetime.now().strftime('%Y%m%d_%H%M%S')
+    order_id = data['customer']['poNumber']
     json_path = os.path.join(STORAGE_PATH, 'orders', f'order_{order_id}.json')
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
@@ -85,7 +87,7 @@ def generate_pdf(order_id, data):
         </head>
         <body>
             <div class="header">
-                <h1>Purchase Order #{order_id}</h1>
+                <h1>Purchase Order #{data['customer']['poNumber']}</h1>
                 <p>Date: {datetime.now().strftime('%Y-%m-%d')}</p>
             </div>
             
