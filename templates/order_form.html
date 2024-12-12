@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Box Hub Modification Order Form</title>
+    <title>Boxhub Modification Order Form</title>
     <link href="https://unpkg.com/tailwindcss@^2.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 p-6">
     <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-6">Box Hub Modification Order Form</h1>
+        <h1 class="text-2xl font-bold mb-6">Boxhub Modification Order Form</h1>
         
         <form id="orderForm" class="space-y-6">
             <!-- Customer Information -->
@@ -56,17 +56,18 @@
             <div class="border rounded-lg p-4">
                 <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
                 <!-- Column Headers -->
-                <div class="grid grid-cols-6 gap-4 mb-2 font-medium text-sm text-gray-600">
+                <div class="grid grid-cols-7 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
                     <div>Base Price</div>
                     <div>Markup %</div>
+                    <div>Markup Total</div>
                     <div>Quantity</div>
                 </div>
                 <div class="space-y-4">
                     {% for name, details in items.items() recursive %}
                     {% if details.price is defined %}
-                    <div class="grid grid-cols-6 gap-4 items-center">
+                    <div class="grid grid-cols-7 gap-4 items-center">
                         <div class="col-span-2">
                             {{ name }}
                             {% if details.description %}
@@ -84,17 +85,18 @@
                                    class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                         <div>${{ details.price }}</div>
-                        <div class="relative">
+                        <div>
                             <input type="number" min="0" max="100" value="0"
                                    class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                    data-base-price="{{ details.price }}">
                         </div>
-                        <div class="relative">
+                        <div class="markup-total">$0.00</div>
+                        <div>
                             <input type="number" min="0" value="0"
                                    class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                         {% if details.options %}
-                        <div class="col-span-6 mt-2">
+                        <div class="col-span-7 mt-2">
                             <select class="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                 <option value="">Select Option</option>
                                 {% for option in details.options %}
@@ -146,6 +148,13 @@
             const globalMarkupInput = document.getElementById('globalMarkup');
             const applyMarkupButton = document.getElementById('applyMarkup');
             
+            // Prevent form submission on enter key
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.target.type !== 'textarea') {
+                    e.preventDefault();
+                }
+            });
+            
             applyMarkupButton.addEventListener('click', function() {
                 const markupValue = globalMarkupInput.value;
                 document.querySelectorAll('.markup-input').forEach(input => {
@@ -154,28 +163,41 @@
                 updateTotals();
             });
             
-            form.addEventListener('input', updateTotals);
+            form.addEventListener('input', function(e) {
+                if (e.target.classList.contains('markup-input') || 
+                    e.target.classList.contains('quantity-input')) {
+                    updateTotals();
+                }
+            });
+            
+            function updateMarkupTotal(row) {
+                const basePrice = parseFloat(row.querySelector('.markup-input').dataset.basePrice);
+                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
+                
+                const markupTotal = basePrice * (markup / 100) * quantity;
+                row.querySelector('.markup-total').textContent = `$${markupTotal.toFixed(2)}`;
+                
+                return {
+                    baseTotal: basePrice * quantity,
+                    markupTotal: markupTotal
+                };
+            }
             
             function updateTotals() {
-                let baseTotal = 0;
-                let markupTotal = 0;
+                let totalBase = 0;
+                let totalMarkup = 0;
                 
                 document.querySelectorAll('.markup-input').forEach(markupInput => {
                     const row = markupInput.closest('.grid');
-                    const basePrice = parseFloat(markupInput.dataset.basePrice);
-                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                    const markup = parseFloat(markupInput.value) || 0;
-                    
-                    const itemBase = basePrice * quantity;
-                    const itemMarkup = itemBase * (markup / 100);
-                    
-                    baseTotal += itemBase;
-                    markupTotal += itemMarkup;
+                    const totals = updateMarkupTotal(row);
+                    totalBase += totals.baseTotal;
+                    totalMarkup += totals.markupTotal;
                 });
                 
-                document.getElementById('baseTotal').textContent = baseTotal.toFixed(2);
-                document.getElementById('markupTotal').textContent = markupTotal.toFixed(2);
-                document.getElementById('finalTotal').textContent = (baseTotal + markupTotal).toFixed(2);
+                document.getElementById('baseTotal').textContent = totalBase.toFixed(2);
+                document.getElementById('markupTotal').textContent = totalMarkup.toFixed(2);
+                document.getElementById('finalTotal').textContent = (totalBase + totalMarkup).toFixed(2);
             }
             
             form.addEventListener('submit', async function(e) {
@@ -241,8 +263,6 @@
                         `;
                         
                         alert('Order submitted successfully! Click the download button to get your PO.');
-                        form.reset();
-                        updateTotals();
                     } else {
                         throw new Error(result.error || 'Unknown error occurred');
                     }
