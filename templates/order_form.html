@@ -11,35 +11,36 @@
         <h1 class="text-2xl font-bold mb-6">Boxhub Modification Order Form</h1>
         
         <form id="orderForm" class="space-y-6">
-            <!-- Customer Information -->
+            <!-- Customer Information - all fields optional now -->
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">PO Number</label>
-                    <input type="text" name="poNumber" required 
+                    <input type="text" name="poNumber" 
                            class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Customer Name</label>
-                    <input type="text" name="customerName" required 
+                    <input type="text" name="customerName" 
                            class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" name="email" required 
+                    <input type="email" name="email" 
                            class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="tel" name="phone" required 
+                    <input type="tel" name="phone" 
                            class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
-                    <textarea name="address" required 
+                    <textarea name="address" 
                               class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
                 </div>
             </div>
 
+            <!-- Rest of the form remains the same -->
             <!-- Global Markup -->
             <div class="bg-gray-100 p-4 rounded">
                 <label class="block text-sm font-medium text-gray-700">Global Markup Percentage</label>
@@ -143,6 +144,7 @@
     </div>
 
     <script>
+        // Previous JavaScript remains the same
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('orderForm');
             const globalMarkupInput = document.getElementById('globalMarkup');
@@ -205,11 +207,11 @@
                 
                 const formData = {
                     customer: {
-                        name: form.querySelector('[name="customerName"]').value,
-                        email: form.querySelector('[name="email"]').value,
-                        phone: form.querySelector('[name="phone"]').value,
-                        address: form.querySelector('[name="address"]').value,
-                        poNumber: form.querySelector('[name="poNumber"]').value
+                        name: form.querySelector('[name="customerName"]').value || '',
+                        email: form.querySelector('[name="email"]').value || '',
+                        phone: form.querySelector('[name="phone"]').value || '',
+                        address: form.querySelector('[name="address"]').value || '',
+                        poNumber: form.querySelector('[name="poNumber"]').value || ''
                     },
                     items: [],
                     notes: form.querySelector('[name="notes"]').value
