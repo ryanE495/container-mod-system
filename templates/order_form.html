@@ -45,8 +45,9 @@
             <div class="border rounded-lg p-4">
                 <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
                 <!-- Column Headers -->
-                <div class="grid grid-cols-5 gap-4 mb-2 font-medium text-sm text-gray-600">
+                <div class="grid grid-cols-6 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
+                    <div>SKU</div>
                     <div>Base Price</div>
                     <div>Markup %</div>
                     <div>Quantity</div>
@@ -54,29 +55,45 @@
                 <div class="space-y-4">
                     {% for name, details in items.items() recursive %}
                     {% if details.price is defined %}
-                    <div class="grid grid-cols-5 gap-4 items-center">
+                    <div class="grid grid-cols-6 gap-4 items-center">
                         <div class="col-span-2">
                             {{ name }}
                             {% if details.description %}
                             <p class="text-sm text-gray-500">{{ details.description }}</p>
                             {% endif %}
+                            {% if details.capacity %}
+                            <p class="text-sm text-gray-500">Capacity: {{ details.capacity }}</p>
+                            {% endif %}
+                            {% if details.lead_time %}
+                            <p class="text-sm text-blue-500">Lead Time: {{ details.lead_time }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <input type="text" 
+                                   class="sku-input w-full rounded-md border-gray-300 shadow-sm" 
+                                   placeholder="Enter SKU">
                         </div>
                         <div>${{ details.price }}</div>
                         <div class="relative">
-                            <input type="number" class="markup-input w-full rounded-md border-gray-300 shadow-sm" 
+                            <input type="number" 
+                                   class="markup-input w-full rounded-md border-gray-300 shadow-sm" 
                                    data-base-price="{{ details.price }}" 
                                    min="0" max="100" value="0">
                         </div>
                         <div class="relative">
-                            <input type="number" class="quantity-input w-full rounded-md border-gray-300 shadow-sm" 
+                            <input type="number" 
+                                   class="quantity-input w-full rounded-md border-gray-300 shadow-sm" 
                                    min="0" value="0">
                         </div>
                         {% if details.options %}
-                        <select class="w-full rounded-md border-gray-300 shadow-sm mt-2">
-                            {% for option in details.options %}
-                            <option value="{{ option }}">{{ option }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="col-span-6 mt-2">
+                            <select class="w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Select Option</option>
+                                {% for option in details.options %}
+                                <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                         {% endif %}
                     </div>
                     {% else %}
@@ -119,7 +136,6 @@
             const globalMarkupInput = document.getElementById('globalMarkup');
             const applyMarkupButton = document.getElementById('applyMarkup');
             
-            // Apply global markup to all items
             applyMarkupButton.addEventListener('click', function() {
                 const markupValue = globalMarkupInput.value;
                 document.querySelectorAll('.markup-input').forEach(input => {
@@ -128,7 +144,6 @@
                 updateTotals();
             });
             
-            // Update totals when any input changes
             form.addEventListener('input', updateTotals);
             
             function updateTotals() {
@@ -153,47 +168,38 @@
                 document.getElementById('finalTotal').textContent = (baseTotal + markupTotal).toFixed(2);
             }
             
-            // Handle form submission
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                console.log('Form submission started'); // Debug log
-                
-                // Get form elements
-                const customerName = form.querySelector('[name="customerName"]');
-                const customerEmail = form.querySelector('[name="email"]');
-                const customerPhone = form.querySelector('[name="phone"]');
-                const customerAddress = form.querySelector('[name="address"]');
-                const notesField = form.querySelector('[name="notes"]');
                 
                 const formData = {
                     customer: {
-                        name: customerName ? customerName.value : '',
-                        email: customerEmail ? customerEmail.value : '',
-                        phone: customerPhone ? customerPhone.value : '',
-                        address: customerAddress ? customerAddress.value : ''
+                        name: form.querySelector('[name="customerName"]').value,
+                        email: form.querySelector('[name="email"]').value,
+                        phone: form.querySelector('[name="phone"]').value,
+                        address: form.querySelector('[name="address"]').value
                     },
                     items: [],
-                    notes: notesField ? notesField.value : ''
+                    notes: form.querySelector('[name="notes"]').value
                 };
                 
-                // Gather selected items
                 document.querySelectorAll('.markup-input').forEach(item => {
                     const row = item.closest('.grid');
-                    if (row) {
-                        const quantity = parseInt(row.querySelector('.quantity-input')?.value) || 0;
-                        if (quantity > 0) {
-                            const nameElement = row.querySelector('.col-span-2');
-                            formData.items.push({
-                                name: nameElement ? nameElement.textContent.trim() : 'Unknown Item',
-                                basePrice: parseFloat(item.dataset.basePrice) || 0,
-                                markup: parseFloat(item.value) || 0,
-                                quantity: quantity
-                            });
-                        }
+                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                    if (quantity > 0) {
+                        const nameElement = row.querySelector('.col-span-2');
+                        const skuInput = row.querySelector('.sku-input');
+                        const optionSelect = row.querySelector('select');
+                        
+                        formData.items.push({
+                            name: nameElement.childNodes[0].textContent.trim(),
+                            sku: skuInput ? skuInput.value : '',
+                            basePrice: parseFloat(item.dataset.basePrice) || 0,
+                            markup: parseFloat(item.value) || 0,
+                            quantity: quantity,
+                            option: optionSelect ? optionSelect.value : null
+                        });
                     }
                 });
-                
-                console.log('Form data prepared:', formData); // Debug log
                 
                 if (formData.items.length === 0) {
                     alert('Please select at least one item with a quantity greater than 0');
@@ -201,7 +207,6 @@
                 }
                 
                 try {
-                    console.log('Sending request to /generate-quote'); // Debug log
                     const response = await fetch('/generate-quote', {
                         method: 'POST',
                         headers: {
@@ -210,17 +215,13 @@
                         body: JSON.stringify(formData)
                     });
                     
-                    console.log('Response received:', response); // Debug log
-                    
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     
                     const result = await response.json();
-                    console.log('Response data:', result); // Debug log
                     
                     if (result.success) {
-                        // Create download button
                         const downloadContainer = document.getElementById('downloadContainer');
                         downloadContainer.innerHTML = `
                             <a href="/download-pdf/${result.order_id}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">
@@ -235,7 +236,7 @@
                         throw new Error(result.error || 'Unknown error occurred');
                     }
                 } catch (error) {
-                    console.error('Full error details:', error); // Enhanced error logging
+                    console.error('Error:', error);
                     alert(`Error submitting order: ${error.message}`);
                 }
             });

@@ -8,11 +8,9 @@ from products import PRODUCT_CATALOG
 
 load_dotenv()
 
-# Configure storage path for Render
 STORAGE_PATH = '/opt/render/project/src/orders'
 app = Flask(__name__)
 
-# Configure pdfkit for Render environment
 WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
 pdfkit_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
 
@@ -23,9 +21,8 @@ def index():
 @app.route('/generate-quote', methods=['POST'])
 def generate_quote():
     try:
-        print("Starting quote generation...")  # Debug log
+        print("Starting quote generation...")
         
-        # Ensure the request has JSON data
         if not request.is_json:
             print("Error: Request does not contain JSON data")
             return jsonify({
@@ -34,19 +31,16 @@ def generate_quote():
             }), 400
             
         data = request.json
-        print(f"Received data: {data}")  # Debug log
+        print(f"Received data: {data}")
         
-        # Create storage directories if they don't exist
         os.makedirs(os.path.join(STORAGE_PATH, 'pdfs'), exist_ok=True)
         os.makedirs(os.path.join(STORAGE_PATH, 'orders'), exist_ok=True)
         
-        # Save order to JSON file
         order_id = save_order(data)
-        print(f"Order saved with ID: {order_id}")  # Debug log
+        print(f"Order saved with ID: {order_id}")
         
-        # Generate PDF
         pdf_path = generate_pdf(order_id, data)
-        print(f"PDF generated at: {pdf_path}")  # Debug log
+        print(f"PDF generated at: {pdf_path}")
         
         if os.path.exists(pdf_path):
             return jsonify({
@@ -69,19 +63,14 @@ def generate_quote():
         }), 500
 
 def save_order(data):
-    # Generate unique order ID
     order_id = datetime.now().strftime('%Y%m%d_%H%M%S')
-    
-    # Save order data to JSON file
     json_path = os.path.join(STORAGE_PATH, 'orders', f'order_{order_id}.json')
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
-    
     return order_id
 
 def generate_pdf(order_id, data):
     try:
-        # Create HTML content for PDF
         html_content = f"""
         <html>
         <head>
@@ -111,10 +100,10 @@ def generate_pdf(order_id, data):
             <h3>Order Details</h3>
             <table>
                 <tr>
+                    <th>SKU</th>
                     <th>Item</th>
                     <th>Quantity</th>
-                    <th>Base Price</th>
-                    <th>Markup %</th>
+                    <th>Unit Price</th>
                     <th>Total</th>
                 </tr>
         """
@@ -124,17 +113,16 @@ def generate_pdf(order_id, data):
             base_price = item['basePrice']
             markup_percent = item['markup']
             quantity = item['quantity']
-            markup_amount = base_price * (markup_percent / 100)
-            unit_price = base_price + markup_amount
+            unit_price = base_price * (1 + markup_percent / 100)
             item_total = unit_price * quantity
             total += item_total
             
             html_content += f"""
                 <tr>
+                    <td>{item.get('sku', 'N/A')}</td>
                     <td>{item['name']}</td>
                     <td>{quantity}</td>
-                    <td>${base_price:.2f}</td>
-                    <td>{markup_percent}%</td>
+                    <td>${unit_price:.2f}</td>
                     <td>${item_total:.2f}</td>
                 </tr>
             """
@@ -153,7 +141,6 @@ def generate_pdf(order_id, data):
         </html>
         """
         
-        # Generate PDF with configuration
         pdf_path = os.path.join(STORAGE_PATH, 'pdfs', f'order_{order_id}.pdf')
         pdfkit.from_string(
             html_content, 
