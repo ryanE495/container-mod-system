@@ -2,10 +2,10 @@ services:
   - type: web
     name: container-mod-system
     env: python
-    buildCommands:
-      - apt-get update
-      - apt-get install -y wkhtmltopdf xvfb libjpeg-dev zlib1g-dev
-      - pip install -r requirements.txt
+    buildCommand: |
+      apt-get update
+      apt-get install -y wkhtmltopdf xvfb
+      pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION

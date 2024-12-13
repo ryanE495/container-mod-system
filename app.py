@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 import json
 import pdfkit
+import platform
 from flask import Flask, render_template, request, jsonify, send_file
 from dotenv import load_dotenv
 from products import PRODUCT_CATALOG
@@ -12,9 +13,18 @@ load_dotenv()
 STORAGE_PATH = '/opt/render/project/src/orders'
 app = Flask(__name__)
 
-# Configure pdfkit for Render environment
-WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
-pdfkit_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+# Configure pdfkit for both local and Render environments
+if platform.system() == 'Windows':
+    WKHTMLTOPDF_PATH = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+else:
+    # Path for Render/Linux
+    WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
+
+try:
+    pdfkit_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+except Exception as e:
+    print(f"Error configuring pdfkit: {str(e)}")
+    pdfkit_config = None
 
 @app.route('/')
 def index():
@@ -65,7 +75,7 @@ def generate_quote():
         }), 500
 
 def save_order(data):
-    order_id = data['customer']['poNumber']
+    order_id = data['customer']['poNumber'] or datetime.now().strftime('%Y%m%d_%H%M%S')
     json_path = os.path.join(STORAGE_PATH, 'orders', f'order_{order_id}.json')
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
