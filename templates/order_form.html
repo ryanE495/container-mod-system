@@ -20,23 +20,23 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Customer Name</label>
-                        <input type="text" name="customerName" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <input type="text" name="customerName" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                 </div>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                        <input type="email" name="email" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <input type="email" name="email" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" name="phone" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <input type="tel" name="phone" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
-                <textarea name="address" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                <textarea name="address" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
             </div>
 
             <!-- Global Markup -->
@@ -282,8 +282,10 @@
                     });
                     
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }const result = await response.json();
+    throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
                     
                     if (result.success) {
                         const downloadContainer = document.getElementById('downloadContainer');
