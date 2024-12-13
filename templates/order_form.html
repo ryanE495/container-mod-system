@@ -57,10 +57,10 @@
                 <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
-                    <div class="text-red-600">Our Cost</div>
-                    <div class="text-green-600">Markup %</div>
+                    <div class="text-gray-600">Base Price</div>
+                    <div class="text-green-600">Your Rate %</div>
                     <div class="text-blue-600">Customer Price</div>
-                    <div class="text-purple-600">Your Margin</div>
+                    <div class="text-green-600">Your Cut</div>
                     <div>Quantity</div>
                 </div>
                 
@@ -119,20 +119,24 @@
             {% endfor %}
 
             <!-- Sales Summary -->
-            <div class="bg-gray-50 p-6 rounded-lg border-2 border-blue-200">
-                <h2 class="text-xl font-bold mb-4 text-blue-800">Your Sales Summary</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <p class="text-gray-600">Total Cost: $<span id="baseTotal" class="font-medium text-red-600">0.00</span></p>
-                        <p class="text-gray-600">Your Total Markup: $<span id="markupTotal" class="font-medium text-green-600">0.00</span></p>
-                        <p class="text-gray-600 font-bold">Customer Total: $<span id="finalTotal" class="font-medium text-blue-600">0.00</span></p>
-                    </div>
-                    <div class="space-y-2">
-                        <p class="text-gray-600">Average Margin: <span id="avgProfitMargin" class="font-medium text-purple-600">0.00</span>%</p>
-                        <p class="text-gray-600">Potential Commission: $<span id="potentialCommission" class="font-medium text-green-600">0.00</span></p>
-                    </div>
-                </div>
+<div class="bg-gray-50 p-6 rounded-lg border-2 border-green-200">
+    <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+            <p class="text-gray-600">Base Cost: <span id="baseTotal" class="font-medium text-gray-600">$0.00</span></p>
+            <p class="text-gray-600 text-xl font-bold">Your Commission: <span id="markupTotal" class="font-medium text-green-600 text-2xl">$0.00</span> 🎯</p>
+            <p class="text-gray-600">Customer Pays: <span id="finalTotal" class="font-medium text-blue-600">$0.00</span></p>
+        </div>
+        <div class="space-y-2 bg-green-50 p-4 rounded-lg border border-green-300">
+            <h3 class="font-bold text-green-800">Potential Earnings 📈</h3>
+            <p class="text-gray-600">This Sale: <span id="potentialCommission" class="font-medium text-green-600 text-xl">$0.00</span></p>
+            <p class="text-sm text-green-600">* Based on standard commission rate</p>
+            <div class="mt-2 text-xs text-gray-500">
+                <p>💡 Pro Tip: Use the Quick Markup feature to maximize your earnings!</p>
             </div>
+        </div>
+    </div>
+</div>
 
             <!-- Notes -->
             <div>
