@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head section remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,13 +55,13 @@
             {% for category, items in catalog.items() %}
             <div class="border rounded-lg p-4">
                 <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
-                <!-- Column Headers - Changed "Base Price" to "Our Cost" -->
+                <!-- Column Headers -->
                 <div class="grid grid-cols-7 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
-                    <div>Our Cost</div>
+                    <div>Base Cost</div>
                     <div>Markup %</div>
-                    <div>Markup Total</div>
+                    <div>Retail Price</div>
                     <div>Quantity</div>
                 </div>
                 <div class="space-y-4">
@@ -118,11 +117,11 @@
             </div>
             {% endfor %}
 
-            <!-- Order Summary - Changed "Base Total" to "Cost Total" -->
+            <!-- Order Summary -->
             <div class="border rounded-lg p-4">
                 <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
                 <div class="space-y-2">
-                    <p>Cost Total: $<span id="baseTotal">0.00</span></p>
+                    <p>Base Total: $<span id="baseTotal">0.00</span></p>
                     <p>Markup Total: $<span id="markupTotal">0.00</span></p>
                     <p class="font-bold">Final Total: $<span id="finalTotal">0.00</span></p>
                 </div>
@@ -175,12 +174,14 @@
                 const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
                 const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
                 
-                const markupTotal = basePrice * (markup / 100) * quantity;
-                row.querySelector('.markup-total').textContent = `$${markupTotal.toFixed(2)}`;
+                // Calculate full retail price (base + markup)
+                const totalPrice = basePrice * (1 + markup / 100) * quantity;
+                row.querySelector('.markup-total').textContent = `$${totalPrice.toFixed(2)}`;
                 
                 return {
                     baseTotal: basePrice * quantity,
-                    markupTotal: markupTotal
+                    markupTotal: basePrice * (markup / 100) * quantity,
+                    totalPrice: totalPrice
                 };
             }
             

@@ -93,6 +93,7 @@ def generate_pdf(order_id, data):
                 table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
                 th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
                 .total {{ font-weight: bold; margin-top: 20px; }}
+                .summary {{ margin-top: 30px; padding: 15px; background-color: #f8f9fa; }}
             </style>
         </head>
         <body>
@@ -120,14 +121,21 @@ def generate_pdf(order_id, data):
                 </tr>
         """
         
-        total = 0
+        total_base = 0
+        total_markup = 0
+        
         for item in data['items']:
             base_price = item['basePrice']
             markup_percent = item['markup']
             quantity = item['quantity']
-            unit_price = base_price * (1 + markup_percent / 100)
+            
+            # Calculate prices
+            unit_price = base_price * (1 + markup_percent / 100)  # Full retail price per unit
             item_total = unit_price * quantity
-            total += item_total
+            markup_amount = (base_price * (markup_percent / 100)) * quantity
+            
+            total_base += base_price * quantity
+            total_markup += markup_amount
             
             html_content += f"""
                 <tr>
@@ -139,10 +147,16 @@ def generate_pdf(order_id, data):
                 </tr>
             """
 
+        final_total = total_base + total_markup
+
         html_content += f"""
             </table>
-            <div class="total">
-                <p>Total Amount: ${total:.2f}</p>
+            
+            <div class="summary">
+                <h3>Order Summary</h3>
+                <p>Base Cost Total: ${total_base:.2f}</p>
+                <p>Markup Amount: ${total_markup:.2f}</p>
+                <p class="total">Final Total: ${final_total:.2f}</p>
             </div>
             
             <div class="notes">
