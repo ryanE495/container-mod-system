@@ -94,6 +94,7 @@ def generate_pdf(order_id, data):
                 th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
                 .total {{ font-weight: bold; margin-top: 20px; }}
                 .summary {{ margin-top: 30px; padding: 15px; background-color: #f8f9fa; }}
+                .commission-info {{ margin-top: 15px; color: #1a56db; }}
             </style>
         </head>
         <body>
@@ -117,25 +118,31 @@ def generate_pdf(order_id, data):
                     <th>Item</th>
                     <th>Quantity</th>
                     <th>Unit Price</th>
+                    <th>Profit Margin</th>
                     <th>Total</th>
                 </tr>
         """
         
         total_base = 0
         total_markup = 0
+        total_profit_margin = 0
+        item_count = 0
         
         for item in data['items']:
             base_price = item['basePrice']
             markup_percent = item['markup']
             quantity = item['quantity']
             
-            # Calculate prices
-            unit_price = base_price * (1 + markup_percent / 100)  # Full retail price per unit
+            # Calculate prices and margins
+            unit_price = base_price * (1 + markup_percent / 100)
             item_total = unit_price * quantity
             markup_amount = (base_price * (markup_percent / 100)) * quantity
+            profit_margin = (markup_amount / item_total * 100)
             
             total_base += base_price * quantity
             total_markup += markup_amount
+            total_profit_margin += profit_margin
+            item_count += 1
             
             html_content += f"""
                 <tr>
@@ -143,10 +150,12 @@ def generate_pdf(order_id, data):
                     <td>{item['name']}</td>
                     <td>{quantity}</td>
                     <td>${unit_price:.2f}</td>
+                    <td>{profit_margin:.2f}%</td>
                     <td>${item_total:.2f}</td>
                 </tr>
             """
 
+        avg_profit_margin = total_profit_margin / item_count if item_count > 0 else 0
         final_total = total_base + total_markup
 
         html_content += f"""
@@ -157,6 +166,9 @@ def generate_pdf(order_id, data):
                 <p>Base Cost Total: ${total_base:.2f}</p>
                 <p>Markup Amount: ${total_markup:.2f}</p>
                 <p class="total">Final Total: ${final_total:.2f}</p>
+                <div class="commission-info">
+                    <p>Average Profit Margin: {avg_profit_margin:.2f}%</p>
+                </div>
             </div>
             
             <div class="notes">
