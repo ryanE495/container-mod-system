@@ -54,13 +54,14 @@
             {% for category, items in catalog.items() %}
             <div class="border rounded-lg p-4">
                 <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
+               <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
                 <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
                     <div class="text-gray-600">Base Price</div>
                     <div class="text-green-600">Your Rate %</div>
                     <div class="text-blue-600">Customer Price</div>
-                    <div class="text-green-600">Your Cut</div>
+                    <div class="text-green-600">Your Commission ($)</div>
                     <div>Quantity</div>
                 </div>
                 
@@ -183,26 +184,26 @@
             });
             
             function updateMarkupTotal(row) {
-                if (!row) return null;
-                
-                const basePrice = parseFloat(row.querySelector('.markup-input').dataset.basePrice) || 0;
-                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
-                
-                const markupAmount = basePrice * (markup / 100);
-                const customerPrice = basePrice * (1 + markup / 100);
-                const profitMargin = (markupAmount / customerPrice * 100);
-                
-                row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
-                row.querySelector('.profit-margin').textContent = `${profitMargin.toFixed(1)}%`;
-                
-                return {
-                    baseTotal: basePrice * quantity,
-                    markupTotal: markupAmount * quantity,
-                    profitMargin: profitMargin,
-                    total: customerPrice * quantity
-                };
-            }
+    if (!row) return null;
+    
+    const basePrice = parseFloat(row.querySelector('.markup-input').dataset.basePrice) || 0;
+    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+    const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
+    
+    const markupAmount = basePrice * (markup / 100);
+    const customerPrice = basePrice * (1 + markup / 100);
+    const commission = markupAmount * quantity;  // Calculate commission in dollars
+    
+    row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
+    row.querySelector('.profit-margin').textContent = `$${commission.toFixed(2)}`;
+    
+    return {
+        baseTotal: basePrice * quantity,
+        markupTotal: markupAmount * quantity,
+        commission: commission,
+        total: customerPrice * quantity
+    };
+}
             
             function updateTotals() {
                 let totalBase = 0;
