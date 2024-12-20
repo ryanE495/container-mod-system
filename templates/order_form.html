@@ -4,304 +4,227 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boxhub Sales Order Form</title>
-    <link href="https://unpkg.com/tailwindcss@^2.2/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .input-field {
+            @apply mt-1 p-2 w-full border rounded-md;
+        }
+        .section-header {
+            @apply text-xl font-semibold mb-4;
+        }
+        .grid-row {
+            @apply grid grid-cols-7 gap-4 items-center py-2;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 p-6">
-    <div class="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-6">Boxhub Sales Order Form</h1>
-        
-        <!-- Customer Information -->
-        <form id="orderForm" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">PO Number</label>
-                        <input type="text" name="poNumber" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Customer Name</label>
-                        <input type="text" name="customerName" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                        <input type="email" name="email" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" name="phone" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
-                <textarea name="address" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
-            </div>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto p-6 bg-white my-8 rounded-lg shadow">
+        <h1 class="text-3xl font-bold mb-8">Boxhub Sales Order Form</h1>
 
-            <!-- Global Markup -->
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <label class="block text-sm font-medium text-gray-700">Quick Markup</label>
-                <div class="flex items-center space-x-2">
-                    <input type="number" id="globalMarkup" min="0" value="0"
-                           class="mt-1 block w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <button type="button" id="applyMarkup" 
-                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Apply to All Items</button>
+        <form id="orderForm">
+            <!-- Customer Information -->
+            <div class="grid grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block mb-2">Customer Name</label>
+                    <input type="text" name="customerName" required class="input-field">
+                </div>
+                <div>
+                    <label class="block mb-2">Email Address</label>
+                    <input type="email" name="email" required class="input-field">
+                </div>
+                <div>
+                    <label class="block mb-2">Phone Number</label>
+                    <input type="tel" name="phone" required class="input-field">
+                </div>
+                <div>
+                    <label class="block mb-2">Shipping Address</label>
+                    <textarea name="shippingAddress" required class="input-field" rows="3"></textarea>
                 </div>
             </div>
 
-            <!-- Product Categories -->
-            <div class="border rounded-lg p-4">
-                <h2 class="text-xl font-semibold mb-4">Shelters</h2>
-                <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
+            <!-- Quick Markup -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-8">
+                <label class="block mb-2">Quick Markup</label>
+                <div class="flex gap-4">
+                    <input type="number" id="globalMarkup" class="w-32 input-field" min="0" max="100">
+                    <button type="button" id="applyMarkup" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Apply to All Items
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weld and Go Doors -->
+            <div class="mb-8">
+                <h2 class="section-header">Weld and Go Doors</h2>
+                <div class="grid-header grid-row font-semibold">
                     <div class="col-span-2">Item</div>
-                    <div>SKU</div>
-                    <div class="text-gray-600">Our Cost</div>
-                    <div class="text-green-600">Markup</div>
-                    <div class="text-blue-600">Customer Price</div>
-                    <div class="text-green-600">Your GP</div>
+                    <div>Our Cost</div>
+                    <div>Markup</div>
+                    <div>Customer Price</div>
+                    <div>Your GP</div>
                     <div>Quantity</div>
                 </div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-8 gap-4 items-center">
-                        <div class="col-span-2">20' (L) x 20' (W) x 6'5" (H)</div>
-                        <div>
-                            <input type="text" placeholder="SKU" class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                        <div class="text-red-600 font-medium">$1895</div>
-                        <div>
-                            <input type="number" min="0" max="100" value="0"
-                                   class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                   data-base-price="1895">
-                        </div>
-                        <div class="customer-price text-blue-600 font-medium">$0.00</div>
-                        <div class="profit-margin text-green-600 font-medium">$0.00</div>
-                        <div>
-                            <input type="number" min="0" value="0"
-                                   class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-                    <!-- Add more items as needed -->
+                <div class="product-row grid-row" data-category="weldAndGo">
+                    <div class="col-span-2">Main Door</div>
+                    <div>$750.00</div>
+                    <input type="number" class="markup-input input-field" min="0" max="100" value="0">
+                    <div class="customer-price">$750.00</div>
+                    <div class="gp">$0.00</div>
+                    <input type="number" class="quantity-input input-field" min="0" value="0">
                 </div>
             </div>
 
-            <!-- Shipping Section -->
-            <div class="border rounded-lg p-4">
-                <h2 class="text-xl font-semibold mb-4">Shipping</h2>
-                <div class="grid grid-cols-8 gap-4 items-center">
-                    <div class="col-span-2">
-                        <span>Shipping Cost</span>
-                        <p class="text-sm text-gray-500">Additional transportation fees</p>
-                    </div>
-                    <div>
-                        <input type="text" placeholder="SKU" class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <input type="number" min="0" value="0" class="base-price-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <input type="number" min="0" max="100" value="0" class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div class="customer-price text-blue-600 font-medium">$0.00</div>
-                    <div class="profit-margin text-green-600 font-medium">$0.00</div>
-                    <div>
-                        <input type="number" min="1" value="1" class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
+            <!-- Roll Up Doors -->
+            <div class="mb-8">
+                <h2 class="section-header">Roll Up Doors</h2>
+                <div class="grid-header grid-row font-semibold">
+                    <div class="col-span-2">Item</div>
+                    <div>Our Cost</div>
+                    <div>Markup</div>
+                    <div>Customer Price</div>
+                    <div>Your GP</div>
+                    <div>Quantity</div>
                 </div>
+                <div class="product-row grid-row" data-cost="895">
+                    <div class="col-span-2">5' x 6' Roll Up Door</div>
+                    <div>$895.00</div>
+                    <input type="number" class="markup-input input-field" min="0" max="100" value="0">
+                    <div class="customer-price">$895.00</div>
+                    <div class="gp">$0.00</div>
+                    <input type="number" class="quantity-input input-field" min="0" value="0">
+                </div>
+                <!-- Add more roll-up door sizes here -->
             </div>
 
-            <!-- Sales Summary -->
-            <div class="bg-gray-50 p-6 rounded-lg border-2 border-green-200">
-                <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <p class="text-gray-600">Our Cost: <span id="baseTotal" class="font-medium text-gray-600">$0.00</span></p>
-                        <p class="text-gray-600 text-xl font-bold">Your GP: <span id="markupTotal" class="font-medium text-green-600 text-2xl">$0.00</span> 🎯</p>
-                        <p class="text-gray-600">Customer Pays: <span id="finalTotal" class="font-medium text-blue-600">$0.00</span></p>
+            <!-- Windows -->
+            <div class="mb-8">
+                <h2 class="section-header">Windows</h2>
+                <div class="product-row grid-row" data-cost="395">
+                    <div class="col-span-2">36" x 36" Slide Window (No Rain)</div>
+                    <div>$395.00</div>
+                    <input type="number" class="markup-input input-field" min="0" max="100" value="0">
+                    <div class="customer-price">$395.00</div>
+                    <div class="gp">$0.00</div>
+                    <input type="number" class="quantity-input input-field" min="0" value="0">
+                </div>
+                <!-- Add more window options here -->
+            </div>
+
+            <!-- Sales Dashboard -->
+            <div class="bg-blue-50 p-6 rounded-lg mb-8">
+                <h2 class="text-xl font-semibold mb-4">🎯 Your Sales Dashboard 🎯</h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <p class="mb-2">Our Cost: $<span id="totalCost">0.00</span></p>
+                        <p class="text-xl font-bold">Your GP: $<span id="totalGP">0.00</span> 💰</p>
+                        <p>Customer Price: $<span id="totalPrice">0.00</span></p>
                     </div>
-                    <div class="space-y-2 bg-green-50 p-4 rounded-lg border border-green-300">
-                        <h3 class="font-bold text-green-800">Your GP 📈</h3>
-                        <p class="text-gray-600">This Sale: <span id="potentialCommission" class="font-medium text-green-600 text-xl">$0.00</span></p>
-                        <p class="text-sm text-green-600">* Based on total sales for the month</p>
-                        <div class="mt-2 text-xs text-gray-500">
-                            <p>💡 Pro Tip: Use the Quick Markup feature to maximize your earnings!</p>
-                        </div>
+                    <div class="bg-green-50 p-4 rounded">
+                        <h3 class="font-semibold mb-2">Your GP</h3>
+                        <p class="text-xl font-bold">This Sale: $<span id="saleGP">0.00</span></p>
+                        <p class="text-sm text-gray-600 mt-2">* Based on total sales for the month</p>
                     </div>
                 </div>
             </div>
 
             <!-- Notes -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Additional Notes</label>
-                <textarea name="notes" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+            <div class="mb-8">
+                <label class="block mb-2">Additional Notes</label>
+                <textarea name="notes" class="input-field" rows="4"></textarea>
             </div>
 
-            <div class="flex space-x-4">
-                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">Generate Order</button>
-                <div id="downloadContainer"></div>
-            </div>
+            <button type="submit" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600">
+                Complete Order
+            </button>
         </form>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Get all the necessary elements
             const form = document.getElementById('orderForm');
             const globalMarkupInput = document.getElementById('globalMarkup');
             const applyMarkupButton = document.getElementById('applyMarkup');
             
-            const COMMISSION_RATE = 0.5; // 50% of markup goes to sales rep
-            
-            form.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && e.target.type !== 'textarea') {
-                    e.preventDefault();
-                }
-            });
-            
-            applyMarkupButton.addEventListener('click', function() {
-                const markupValue = parseFloat(globalMarkupInput.value) || 0;
-                document.querySelectorAll('.markup-input').forEach(input => {
-                    input.value = markupValue;
-                    updateMarkupTotal(input.closest('.grid'));
-                });
-                updateTotals();
-            });
-            
-            document.addEventListener('input', function(e) {
-                if (e.target.classList.contains('markup-input') || 
-                    e.target.classList.contains('quantity-input')) {
-                    updateMarkupTotal(e.target.closest('.grid'));
-                    updateTotals();
-                }
-            });
-            
-            function getBasePrice(row) {
-                const basePriceInput = row.querySelector('.base-price-input');
-                const markupInput = row.querySelector('.markup-input');
-                
-                if (basePriceInput) {
-                    return parseFloat(basePriceInput.value) || 0;
-                } else if (markupInput && markupInput.dataset.basePrice) {
-                    return parseFloat(markupInput.dataset.basePrice) || 0;
-                }
-                return 0;
+            // Calculate customer price based on cost and markup
+            function calculatePrice(cost, markup) {
+                return cost * (1 + markup / 100);
             }
-            
-            function updateMarkupTotal(row) {
-                if (!row) return null;
-                
-                const basePrice = parseFloat(row.querySelector('.markup-input').dataset.basePrice) || 0;
-                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
-                
-                const markupAmount = basePrice * (markup / 100);
-                const customerPrice = basePrice * (1 + markup / 100);
-                const commission = markupAmount * COMMISSION_RATE;
-                
-                row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
-                row.querySelector('.profit-margin').textContent = `$${commission.toFixed(2)}`;
-                
-                return {
-                    baseTotal: basePrice * quantity,
-                    customerTotal: customerPrice * quantity,
-                    grossProfit: commission * quantity
-                };
-            }
-            
-            function updateTotals() {
-                let totalBase = 0;
-                let totalCustomer = 0;
-                let totalGrossProfit = 0;
-                
-                document.querySelectorAll('.markup-input').forEach(markupInput => {
-                    const row = markupInput.closest('.grid');
-                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                    if (quantity > 0) {
-                        const totals = updateMarkupTotal(row);
-                        if (totals) {
-                            totalBase += totals.baseTotal;
-                            totalCustomer += totals.customerTotal;
-                            totalGrossProfit += totals.grossProfit;
-                        }
-                    }
-                });
-                
-                document.getElementById('baseTotal').textContent = `$${totalBase.toFixed(2)}`;
-                document.getElementById('markupTotal').textContent = `$${totalGrossProfit.toFixed(2)}`;
-                document.getElementById('finalTotal').textContent = `$${totalCustomer.toFixed(2)}`;
-                document.getElementById('potentialCommission').textContent = `$${totalGrossProfit.toFixed(2)}`;
-            }
-            
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = {
-                    customer: {
-                        name: form.querySelector('[name="customerName"]').value.trim(),
-                        email: form.querySelector('[name="email"]').value.trim(),
-                        phone: form.querySelector('[name="phone"]').value.trim(),
-                        address: form.querySelector('[name="address"]').value.trim(),
-                        poNumber: form.querySelector('[name="poNumber"]').value.trim()
-                    },
-                    items: [],
-                    notes: form.querySelector('[name="notes"]').value.trim()
-                };
-                
-                document.querySelectorAll('.markup-input').forEach(item => {
-                    const row = item.closest('.grid');
-                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                    
-                    if (quantity > 0) {
-                        const nameElement = row.querySelector('.col-span-2');
-                        const skuInput = row.querySelector('.sku-input');
-                        const basePrice = parseFloat(item.dataset.basePrice);
-                        const markup = parseFloat(item.value) || 0;
-                        
-                        formData.items.push({
-                            name: nameElement.textContent.trim(),
-                            sku: skuInput ? skuInput.value.trim() : '',
-                            basePrice: basePrice,
-                            markup: markup,
-                            quantity: quantity
-                        });
-                    }
-                });
-                
-                if (formData.items.length === 0) {
-                    alert('Please select at least one item with a quantity greater than 0');
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/generate-quote', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
 
-                    const result = await response.json();
+            // Calculate GP (customer price - our cost)
+            function calculateGP(customerPrice, cost) {
+                return customerPrice - cost;
+            }
+
+            // Update a single product row
+            function updateRow(row) {
+                const cost = parseFloat(row.dataset.cost);
+                const markupInput = row.querySelector('.markup-input');
+                const quantityInput = row.querySelector('.quantity-input');
+                const customerPriceDiv = row.querySelector('.customer-price');
+                const gpDiv = row.querySelector('.gp');
+
+                const markup = parseFloat(markupInput.value) || 0;
+                const quantity = parseInt(quantityInput.value) || 0;
+                
+                const customerPrice = calculatePrice(cost, markup);
+                const gp = calculateGP(customerPrice, cost);
+
+                customerPriceDiv.textContent = `$${customerPrice.toFixed(2)}`;
+                gpDiv.textContent = `$${(gp * quantity).toFixed(2)}`;
+
+                updateTotals();
+            }
+
+            // Update all totals in the dashboard
+            function updateTotals() {
+                let totalCost = 0;
+                let totalPrice = 0;
+                let totalGP = 0;
+
+                document.querySelectorAll('.product-row').forEach(row => {
+                    const cost = parseFloat(row.dataset.cost);
+                    const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
+                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
                     
-                    if (result.success) {
-                        const downloadContainer = document.getElementById('downloadContainer');
-                        downloadContainer.innerHTML = `<a href="/download-pdf/${result.order_id}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">Download PDF</a>`;
-                        alert('Order generated successfully!');
-                    } else {
-                        throw new Error(result.error || 'Failed to generate order');
-                    }
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error generating order: ' + error.message);
-                }
+                    const customerPrice = calculatePrice(cost, markup);
+                    const gp = calculateGP(customerPrice, cost);
+
+                    totalCost += cost * quantity;
+                    totalPrice += customerPrice * quantity;
+                    totalGP += gp * quantity;
+                });
+
+                document.getElementById('totalCost').textContent = totalCost.toFixed(2);
+                document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+                document.getElementById('totalGP').textContent = totalGP.toFixed(2);
+                document.getElementById('saleGP').textContent = totalGP.toFixed(2);
+            }
+
+            // Apply global markup to all items
+            applyMarkupButton.addEventListener('click', function() {
+                const globalMarkup = parseFloat(globalMarkupInput.value) || 0;
+                document.querySelectorAll('.markup-input').forEach(input => {
+                    input.value = globalMarkup;
+                    updateRow(input.closest('.product-row'));
+                });
             });
-            
-            // Initialize calculations on page load
-            updateTotals();
+
+            // Add event listeners for markup and quantity changes
+            document.querySelectorAll('.product-row').forEach(row => {
+                const markupInput = row.querySelector('.markup-input');
+                const quantityInput = row.querySelector('.quantity-input');
+
+                markupInput.addEventListener('input', () => updateRow(row));
+                quantityInput.addEventListener('input', () => updateRow(row));
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Add your form submission logic here
+                console.log('Form submitted');
+            });
         });
     </script>
 </body>
