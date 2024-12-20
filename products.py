@@ -59,5 +59,23 @@ PRODUCT_CATALOG = {
         'Shelf Brackets 2 Pack': {'price': 175},
         'Shelf Brackets 4 Pack': {'price': 295},
         'Shelf Brackets 8 Pack': {'price': 565}
+    },
+    'shelters': {
+        '20ft Length Shelters': {
+            '20\'(L) x 20\'(W) x 6\'5"(H)': {'price': 1895},
+            '20\'(L) x 26\'(W) x 10\'(H)': {'price': 2450},
+            '20\'(L) x 40\'(W) x 12\'(H)': {'price': 2999}
+        },
+        '40ft Length Shelters': {
+            '40\'(L) x 20\'(W) x 6\'(H)': {'price': 2899},
+            '40\'(L) x 26\'(W) x 10\'(H)': {'price': 3999},
+            '40\'(L) x 40\'(W) x 12\'(H)': {'price': 5195}
+        }
+    },
+    'accessories': {
+        'Container Caster Wheels': {
+            'price': 2200,
+            'description': '11,000 lbs capacity (set of 4)'
+        }
     }
 }
