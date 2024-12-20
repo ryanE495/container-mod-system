@@ -5,31 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boxhub Sales Order Form</title>
     <link href="https://unpkg.com/tailwindcss@^2.2/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-        .sku-input {
-            width: 100px;
-        }
-        .description-text {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 0.25rem;
-        }
-    </style>
 </head>
 <body class="bg-gray-50 p-6">
     <div class="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-6">
         <h1 class="text-2xl font-bold mb-6">Boxhub Sales Order Form</h1>
         
+        <!-- Customer Information -->
         <form id="orderForm" class="space-y-6">
-            <!-- Customer Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div>
@@ -52,108 +34,104 @@
                     </div>
                 </div>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
-                <textarea name="address" rows="3" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                <textarea name="address" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
             </div>
 
-            <!-- Quick Markup -->
-            <div class="bg-blue-50 p-4 rounded">
+            <!-- Global Markup -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <label class="block text-sm font-medium text-gray-700">Quick Markup</label>
                 <div class="flex items-center space-x-2">
-                    <input type="number" id="globalMarkup" class="mt-1 block w-32 rounded-md border border-gray-300 shadow-sm">
-                    <button type="button" id="applyMarkup" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        Apply to All Items
-                    </button>
+                    <input type="number" id="globalMarkup" min="0" value="0"
+                           class="mt-1 block w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <button type="button" id="applyMarkup" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Apply to All Items</button>
                 </div>
             </div>
 
-            <!-- Weld And Go Doors -->
+            <!-- Product Categories -->
+            {% for category, items in catalog.items() %}
             <div class="border rounded-lg p-4">
-                <h2 class="text-xl font-semibold mb-4">Weld And Go Doors</h2>
-                <div class="grid grid-cols-7 gap-4 mb-2 font-medium text-sm">
+                <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
+                <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
-                    <div>Our Cost</div>
-                    <div>Markup</div>
-                    <div>Customer Price</div>
-                    <div>Your GP</div>
+                    <div class="text-gray-600">Base Price</div>
+                    <div class="text-green-600">Your Rate %</div>
+                    <div class="text-blue-600">Customer Price</div>
+                    <div class="text-green-600">Your Commission</div>
                     <div>Quantity</div>
-                </div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-7 gap-4 items-center">
+                </div><div class="space-y-4">
+                    {% for name, details in items.items() recursive %}
+                    {% if details.price is defined %}
+                    <div class="grid grid-cols-8 gap-4 items-center">
                         <div class="col-span-2">
-                            Main Door
-                            <div class="description-text">Includes: weld in frame, raindrip/door sweep/threshold plate/gasket/deadbolt/door lever</div>
+                            {{ name }}
+                            {% if details.description %}
+                            <p class="text-sm text-gray-500">{{ details.description }}</p>
+                            {% endif %}
+                            {% if details.capacity %}
+                            <p class="text-sm text-gray-500">Capacity: {{ details.capacity }}</p>
+                            {% endif %}
+                            {% if details.lead_time %}
+                            <p class="text-sm text-blue-500">Lead Time: {{ details.lead_time }}</p>
+                            {% endif %}
                         </div>
-                        <input type="text" class="sku-input rounded-md border border-gray-300 shadow-sm">
-                        <div>$750.00</div>
-                        <input type="number" class="markup-input w-full rounded-md border border-gray-300 shadow-sm" 
-                               min="0" max="100" value="0" data-base-price="750">
-                        <div class="customer-price">$0.00</div>
-                        <div class="gp">$0.00</div>
-                        <input type="number" class="quantity-input w-full rounded-md border border-gray-300 shadow-sm" 
-                               min="0" value="0">
+                        <div>
+                            <input type="text" placeholder="SKU"
+                                   class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div class="text-red-600 font-medium">${{ details.price }}</div>
+                        <div>
+                            <input type="number" min="0" max="100" value="0"
+                                   class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                   data-base-price="{{ details.price }}">
+                        </div>
+                        <div class="customer-price text-blue-600 font-medium">$0.00</div>
+                        <div class="profit-margin text-green-600 font-medium">$0.00</div>
+                        <div>
+                            <input type="number" min="0" value="0"
+                                   class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        {% if details.options %}
+                        <div class="col-span-8 mt-2">
+                            <select class="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="">Select Option</option>
+                                {% for option in details.options %}
+                                <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="col-span-7 pl-8">
-                        <select class="w-full rounded-md border border-gray-300 shadow-sm">
-                            <option value="">Select Door Configuration</option>
-                            <option>Left hand inswing</option>
-                            <option>Left hand outswing</option>
-                            <option>Right hand inswing</option>
-                            <option>Right hand outswing</option>
-                        </select>
+                    {% else %}
+                    <div class="space-y-4">
+                        <h3 class="font-medium">{{ name }}</h3>
+                        {{ loop(items[name].items()) }}
                     </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
+            {% endfor %}
 
-            <!-- Roll Up Doors -->
-            <div class="border rounded-lg p-4">
-                <h2 class="text-xl font-semibold mb-4">Roll Up Doors</h2>
-                <div class="grid grid-cols-7 gap-4 mb-2 font-medium text-sm">
-                    <div class="col-span-2">Item</div>
-                    <div>SKU</div>
-                    <div>Our Cost</div>
-                    <div>Markup</div>
-                    <div>Customer Price</div>
-                    <div>Your GP</div>
-                    <div>Quantity</div>
-                </div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-7 gap-4 items-center">
-                        <div class="col-span-2">
-                            6ft Roll Up Door
-                            <div class="description-text">Ready to Ship</div>
+            <!-- Sales Summary -->
+            <div class="bg-gray-50 p-6 rounded-lg border-2 border-green-200">
+                <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <p class="text-gray-600">Base Cost: <span id="baseTotal" class="font-medium text-gray-600">$0.00</span></p>
+                        <p class="text-gray-600 text-xl font-bold">Your Commission: <span id="markupTotal" class="font-medium text-green-600 text-2xl">$0.00</span> 🎯</p>
+                        <p class="text-gray-600">Customer Pays: <span id="finalTotal" class="font-medium text-blue-600">$0.00</span></p>
+                    </div>
+                    <div class="space-y-2 bg-green-50 p-4 rounded-lg border border-green-300">
+                        <h3 class="font-bold text-green-800">Potential Earnings 📈</h3>
+                        <p class="text-gray-600">This Sale: <span id="potentialCommission" class="font-medium text-green-600 text-xl">$0.00</span></p>
+                        <p class="text-sm text-green-600">* Based on standard commission rate</p>
+                        <div class="mt-2 text-xs text-gray-500">
+                            <p>💡 Pro Tip: Use the Quick Markup feature to maximize your earnings!</p>
                         </div>
-                        <input type="text" class="sku-input rounded-md border border-gray-300 shadow-sm">
-                        <div>$865.00</div>
-                        <input type="number" class="markup-input w-full rounded-md border border-gray-300 shadow-sm" 
-                               min="0" max="100" value="0" data-base-price="865">
-                        <div class="customer-price">$0.00</div>
-                        <div class="gp">$0.00</div>
-                        <input type="number" class="quantity-input w-full rounded-md border border-gray-300 shadow-sm" 
-                               min="0" value="0">
-                    </div>
-                    <!-- Add more roll up door sizes -->
-                </div>
-            </div>
-
-            <!-- Continue with Windows, Vents, Locks, etc. following the same pattern -->
-
-            <!-- Sales Dashboard -->
-            <div class="bg-blue-50 p-6 rounded-lg">
-                <h2 class="text-xl font-bold mb-4">🎯 Your Sales Dashboard 🎯</h2>
-                <div class="grid grid-cols-2 gap-8">
-                    <div>
-                        <p class="mb-2">Our Cost: $<span id="totalCost">0.00</span></p>
-                        <p class="text-xl font-bold">Your GP: $<span id="totalGP">0.00</span> 💰</p>
-                        <p>Customer Price: $<span id="totalPrice">0.00</span></p>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded">
-                        <h3 class="font-bold">Your GP</h3>
-                        <p class="text-xl">This Sale: $<span id="saleGP">0.00</span></p>
-                        <p class="text-sm text-gray-600">* Based on total sales for the month</p>
                     </div>
                 </div>
             </div>
@@ -161,12 +139,13 @@
             <!-- Notes -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Additional Notes</label>
-                <textarea name="notes" rows="4" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm"></textarea>
+                <textarea name="notes" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
             </div>
 
-            <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-                Complete Order
-            </button>
+            <div class="flex space-x-4">
+                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">Generate Order</button>
+                <div id="downloadContainer"></div>
+            </div>
         </form>
     </div>
 
@@ -176,82 +155,153 @@
             const globalMarkupInput = document.getElementById('globalMarkup');
             const applyMarkupButton = document.getElementById('applyMarkup');
             
-            function calculatePrice(baseCost, markup) {
-                return baseCost * (1 + markup / 100);
-            }
-
-            function calculateGP(customerPrice, ourCost) {
-                return customerPrice - ourCost;
-            }
-
-            function updateRow(row) {
-                const basePrice = parseFloat(row.querySelector('.markup-input').dataset.basePrice);
-                const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
-                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                
-                const customerPrice = calculatePrice(basePrice, markup);
-                const gp = calculateGP(customerPrice, basePrice);
-                
-                row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
-                row.querySelector('.gp').textContent = `$${(gp * quantity).toFixed(2)}`;
-                
-                updateTotals();
-            }
-
-            function updateTotals() {
-                let totalCost = 0;
-                let totalCustomerPrice = 0;
-                let totalGP = 0;
-
-                document.querySelectorAll('.markup-input').forEach(input => {
-                    const row = input.closest('.grid');
-                    const basePrice = parseFloat(input.dataset.basePrice);
-                    const markup = parseFloat(input.value) || 0;
-                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-                    
-                    if (quantity > 0) {
-                        const customerPrice = calculatePrice(basePrice, markup);
-                        const gp = calculateGP(customerPrice, basePrice);
-                        
-                        totalCost += basePrice * quantity;
-                        totalCustomerPrice += customerPrice * quantity;
-                        totalGP += gp * quantity;
-                    }
-                });
-
-                document.getElementById('totalCost').textContent = totalCost.toFixed(2);
-                document.getElementById('totalPrice').textContent = totalCustomerPrice.toFixed(2);
-                document.getElementById('totalGP').textContent = totalGP.toFixed(2);
-                document.getElementById('saleGP').textContent = totalGP.toFixed(2);
-            }
-
-            // Apply global markup to all items
+            const COMMISSION_RATE = 0.5; // 50% of markup goes to sales rep
+            
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.target.type !== 'textarea') {
+                    e.preventDefault();
+                }
+            });
+            
             applyMarkupButton.addEventListener('click', function() {
                 const markupValue = parseFloat(globalMarkupInput.value) || 0;
                 document.querySelectorAll('.markup-input').forEach(input => {
                     input.value = markupValue;
-                    updateRow(input.closest('.grid'));
+                    updateMarkupTotal(input.closest('.grid'));
                 });
+                updateTotals();
             });
-
-            // Listen for changes in markup and quantity inputs
+            
             document.addEventListener('input', function(e) {
                 if (e.target.classList.contains('markup-input') || 
                     e.target.classList.contains('quantity-input')) {
-                    updateRow(e.target.closest('.grid'));
+                    updateMarkupTotal(e.target.closest('.grid'));
+                    updateTotals();
                 }
             });
-
-            // Handle form submission
-            form.addEventListener('submit', function(e) {
+            
+            function updateMarkupTotal(row) {
+                if (!row) return null;
+                
+                const basePrice = parseFloat(row.querySelector('.markup-input').dataset.basePrice) || 0;
+                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
+                
+                const markupAmount = basePrice * (markup / 100);
+                const customerPrice = basePrice * (1 + markup / 100);
+                const commission = markupAmount * COMMISSION_RATE;
+                
+                row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
+                row.querySelector('.profit-margin').textContent = `$${commission.toFixed(2)}`;
+                
+                return {
+                    baseTotal: basePrice * quantity,
+                    markupTotal: markupAmount * quantity,
+                    commission: commission * quantity,
+                    total: customerPrice * quantity
+                };
+            }
+            
+            function updateTotals() {
+                let totalBase = 0;
+                let totalMarkup = 0;
+                let totalCommission = 0;
+                
+                document.querySelectorAll('.markup-input').forEach(markupInput => {
+                    const row = markupInput.closest('.grid');
+                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                    if (quantity > 0) {
+                        const totals = updateMarkupTotal(row);
+                        if (totals) {
+                            totalBase += totals.baseTotal;
+                            totalMarkup += totals.markupTotal;
+                            totalCommission += totals.commission;
+                        }
+                    }
+                });
+                
+                document.getElementById('baseTotal').textContent = `$${totalBase.toFixed(2)}`;
+                document.getElementById('markupTotal').textContent = `$${totalCommission.toFixed(2)}`;
+                document.getElementById('finalTotal').textContent = `$${(totalBase + totalMarkup).toFixed(2)}`;
+                document.getElementById('potentialCommission').textContent = `$${(totalMarkup * COMMISSION_RATE).toFixed(2)}`;
+            }
+            
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                // Add form submission logic here
-                console.log('Form submitted');
-            });
+                
+                const formData = {
+                    customer: {
+                        name: form.querySelector('[name="customerName"]').value.trim(),
+                        email: form.querySelector('[name="email"]').value.trim(),
+                        phone: form.querySelector('[name="phone"]').value.trim(),
+                        address: form.querySelector('[name="address"]').value.trim(),
+                        poNumber: form.querySelector('[name="poNumber"]').value.trim()
+                    },
+                    items: [],
+                    notes: form.querySelector('[name="notes"]').value.trim()
+                };
+                
+                document.querySelectorAll('.markup-input').forEach(item => {
+                    const row = item.closest('.grid');
+                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                    
+                    if (quantity > 0) {
+                        const nameElement = row.querySelector('.col-span-2');
+                        const skuInput = row.querySelector('.sku-input');
+                        const optionSelect = row.querySelector('select');
+                        const basePrice = parseFloat(item.dataset.basePrice);
+                        const markup = parseFloat(item.value) || 0;
+                        
+                        formData.items.push({
+                            name: nameElement.childNodes[0].textContent.trim(),
+                            sku: skuInput ? skuInput.value.trim() : '',
+                            basePrice: basePrice,
+                            markup: markup,
+                            quantity: quantity,
+                            option: optionSelect ? optionSelect.value : null
+                        });
+                    }
+                });
+                
+                if (formData.items.length === 0) {
+                    alert('Please select at least one item with a quantity greater than 0');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/generate-quote', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-            // Initialize calculations
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const downloadContainer = document.getElementById('downloadContainer');
+                        downloadContainer.innerHTML = `<a href="/download-pdf/${result.order_id}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">Download PDF</a>`;
+                        alert('Order generated successfully!');
+                    } else {
+                        throw new Error(result.error || 'Failed to generate order');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error generating order: ' + error.message);
+                }
+            });
+            
+            // Initialize calculations on page load
             updateTotals();
         });
     </script>
 </body>
 </html>
+
+
