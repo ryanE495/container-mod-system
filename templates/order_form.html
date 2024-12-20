@@ -57,12 +57,13 @@
                 <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
-                    <div class="text-gray-600">Base Price</div>
-                    <div class="text-green-600">Your Rate %</div>
+                    <div class="text-gray-600">Our Cost</div>
+                    <div class="text-green-600">Markup</div>
                     <div class="text-blue-600">Customer Price</div>
-                    <div class="text-green-600">Your Commission</div>
+                    <div class="text-green-600">Your GP</div>
                     <div>Quantity</div>
-                </div><div class="space-y-4">
+                </div>
+                <div class="space-y-4">
                     {% for name, details in items.items() recursive %}
                     {% if details.price is defined %}
                     <div class="grid grid-cols-8 gap-4 items-center">
@@ -121,14 +122,14 @@
                 <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <p class="text-gray-600">Base Cost: <span id="baseTotal" class="font-medium text-gray-600">$0.00</span></p>
-                        <p class="text-gray-600 text-xl font-bold">Your Commission: <span id="markupTotal" class="font-medium text-green-600 text-2xl">$0.00</span> 🎯</p>
+                        <p class="text-gray-600">Our Cost: <span id="baseTotal" class="font-medium text-gray-600">$0.00</span></p>
+                        <p class="text-gray-600 text-xl font-bold">Your GP: <span id="markupTotal" class="font-medium text-green-600 text-2xl">$0.00</span> 🎯</p>
                         <p class="text-gray-600">Customer Pays: <span id="finalTotal" class="font-medium text-blue-600">$0.00</span></p>
                     </div>
                     <div class="space-y-2 bg-green-50 p-4 rounded-lg border border-green-300">
-                        <h3 class="font-bold text-green-800">Potential Earnings 📈</h3>
+                        <h3 class="font-bold text-green-800">Your GP 📈</h3>
                         <p class="text-gray-600">This Sale: <span id="potentialCommission" class="font-medium text-green-600 text-xl">$0.00</span></p>
-                        <p class="text-sm text-green-600">* Based on standard commission rate</p>
+                        <p class="text-sm text-green-600">* Based on total sales for the month</p>
                         <div class="mt-2 text-xs text-gray-500">
                             <p>💡 Pro Tip: Use the Quick Markup feature to maximize your earnings!</p>
                         </div>
@@ -192,20 +193,19 @@
                 const commission = markupAmount * COMMISSION_RATE;
                 
                 row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
-                row.querySelector('.profit-margin').textContent = `$${commission.toFixed(2)}`;
+                row.querySelector('.profit-margin').textContent = `$${grossProfit.toFixed(2)}`;
                 
                 return {
                     baseTotal: basePrice * quantity,
-                    markupTotal: markupAmount * quantity,
-                    commission: commission * quantity,
-                    total: customerPrice * quantity
+                    customerTotal: customerPrice * quantity,
+                    grossProfit: grossProfit * quantity
                 };
             }
             
             function updateTotals() {
                 let totalBase = 0;
-                let totalMarkup = 0;
-                let totalCommission = 0;
+                let totalCustomer = 0;
+                let totalGrossProfit = 0;
                 
                 document.querySelectorAll('.markup-input').forEach(markupInput => {
                     const row = markupInput.closest('.grid');
@@ -214,16 +214,16 @@
                         const totals = updateMarkupTotal(row);
                         if (totals) {
                             totalBase += totals.baseTotal;
-                            totalMarkup += totals.markupTotal;
-                            totalCommission += totals.commission;
+                            totalCustomer += totals.customerTotal;
+                            totalGrossProfit += totals.grossProfit;
                         }
                     }
                 });
                 
                 document.getElementById('baseTotal').textContent = `$${totalBase.toFixed(2)}`;
-                document.getElementById('markupTotal').textContent = `$${totalCommission.toFixed(2)}`;
-                document.getElementById('finalTotal').textContent = `$${(totalBase + totalMarkup).toFixed(2)}`;
-                document.getElementById('potentialCommission').textContent = `$${(totalMarkup * COMMISSION_RATE).toFixed(2)}`;
+                document.getElementById('markupTotal').textContent = `$${totalGrossProfit.toFixed(2)}`;
+                document.getElementById('finalTotal').textContent = `$${totalCustomer.toFixed(2)}`;
+                document.getElementById('potentialCommission').textContent = `$${totalGrossProfit.toFixed(2)}`;
             }
             
             form.addEventListener('submit', async function(e) {
