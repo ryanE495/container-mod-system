@@ -117,6 +117,31 @@
             </div>
             {% endfor %}
 
+            <!-- Shipping Section -->
+            <div class="border rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-4">Shipping</h2>
+                <div class="grid grid-cols-8 gap-4 items-center">
+                    <div class="col-span-2">
+                        <span>Shipping Cost</span>
+                        <p class="text-sm text-gray-500">Additional transportation fees</p>
+                    </div>
+                    <div>
+                        <input type="text" placeholder="SKU" class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <input type="number" min="0" value="0" class="base-price-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <input type="number" min="0" max="100" value="0" class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="customer-price text-blue-600 font-medium">$0.00</div>
+                    <div class="profit-margin text-green-600 font-medium">$0.00</div>
+                    <div>
+                        <input type="number" min="1" value="1" class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+            </div>
+
             <!-- Sales Summary -->
             <div class="bg-gray-50 p-6 rounded-lg border-2 border-green-200">
                 <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
@@ -180,6 +205,18 @@
                     updateTotals();
                 }
             });
+            
+            function getBasePrice(row) {
+                const basePriceInput = row.querySelector('.base-price-input');
+                const markupInput = row.querySelector('.markup-input');
+                
+                if (basePriceInput) {
+                    return parseFloat(basePriceInput.value) || 0;
+                } else if (markupInput && markupInput.dataset.basePrice) {
+                    return parseFloat(markupInput.dataset.basePrice) || 0;
+                }
+                return 0;
+            }
             
             function updateMarkupTotal(row) {
                 if (!row) return null;
