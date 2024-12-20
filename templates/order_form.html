@@ -51,9 +51,8 @@
             </div>
 
             <!-- Product Categories -->
-            {% for category, items in catalog.items() %}
             <div class="border rounded-lg p-4">
-                <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
+                <h2 class="text-xl font-semibold mb-4">Shelters</h2>
                 <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
                     <div class="col-span-2">Item</div>
                     <div>SKU</div>
@@ -64,30 +63,16 @@
                     <div>Quantity</div>
                 </div>
                 <div class="space-y-4">
-                    {% for name, details in items.items() recursive %}
-                    {% if details.price is defined %}
                     <div class="grid grid-cols-8 gap-4 items-center">
-                        <div class="col-span-2">
-                            {{ name }}
-                            {% if details.description %}
-                            <p class="text-sm text-gray-500">{{ details.description }}</p>
-                            {% endif %}
-                            {% if details.capacity %}
-                            <p class="text-sm text-gray-500">Capacity: {{ details.capacity }}</p>
-                            {% endif %}
-                            {% if details.lead_time %}
-                            <p class="text-sm text-blue-500">Lead Time: {{ details.lead_time }}</p>
-                            {% endif %}
-                        </div>
+                        <div class="col-span-2">20' (L) x 20' (W) x 6'5" (H)</div>
                         <div>
-                            <input type="text" placeholder="SKU"
-                                   class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <input type="text" placeholder="SKU" class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
-                        <div class="text-red-600 font-medium">${{ details.price }}</div>
+                        <div class="text-red-600 font-medium">$1895</div>
                         <div>
                             <input type="number" min="0" max="100" value="0"
                                    class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                   data-base-price="{{ details.price }}">
+                                   data-base-price="1895">
                         </div>
                         <div class="customer-price text-blue-600 font-medium">$0.00</div>
                         <div class="profit-margin text-green-600 font-medium">$0.00</div>
@@ -95,27 +80,10 @@
                             <input type="number" min="0" value="0"
                                    class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
-                        {% if details.options %}
-                        <div class="col-span-8 mt-2">
-                            <select class="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="">Select Option</option>
-                                {% for option in details.options %}
-                                <option value="{{ option }}">{{ option }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="space-y-4">
-                        <h3 class="font-medium">{{ name }}</h3>
-                        {{ loop(items[name].items()) }}
-                    </div>
-                    {% endif %}
-                    {% endfor %}
+                    <!-- Add more items as needed -->
                 </div>
             </div>
-            {% endfor %}
 
             <!-- Shipping Section -->
             <div class="border rounded-lg p-4">
@@ -230,12 +198,12 @@
                 const commission = markupAmount * COMMISSION_RATE;
                 
                 row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
-                row.querySelector('.profit-margin').textContent = `$${grossProfit.toFixed(2)}`;
+                row.querySelector('.profit-margin').textContent = `$${commission.toFixed(2)}`;
                 
                 return {
                     baseTotal: basePrice * quantity,
                     customerTotal: customerPrice * quantity,
-                    grossProfit: grossProfit * quantity
+                    grossProfit: commission * quantity
                 };
             }
             
@@ -285,17 +253,15 @@
                     if (quantity > 0) {
                         const nameElement = row.querySelector('.col-span-2');
                         const skuInput = row.querySelector('.sku-input');
-                        const optionSelect = row.querySelector('select');
                         const basePrice = parseFloat(item.dataset.basePrice);
                         const markup = parseFloat(item.value) || 0;
                         
                         formData.items.push({
-                            name: nameElement.childNodes[0].textContent.trim(),
+                            name: nameElement.textContent.trim(),
                             sku: skuInput ? skuInput.value.trim() : '',
                             basePrice: basePrice,
                             markup: markup,
-                            quantity: quantity,
-                            option: optionSelect ? optionSelect.value : null
+                            quantity: quantity
                         });
                     }
                 });
@@ -340,6 +306,3 @@
     </script>
 </body>
 </html>
-
-
-
