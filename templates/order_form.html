@@ -148,152 +148,227 @@
                     </div>
                 </div>
             </div>
-            <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boxhub Sales Order Form</title>
-    <link href="https://unpkg.com/tailwindcss@^2.2/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50 p-6">
-    <!-- Main Container -->
-    <div class="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-6">Boxhub Sales Order Form</h1>
-        
-        <!-- Customer Information Form -->
-        <form id="orderForm" class="space-y-6">
-            <!-- Customer Details Section -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">PO Number</label>
-                        <input type="text" name="poNumber" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <!-- Sales Dashboard -->
+            <div class="bg-gray-50 p-6 rounded-lg border-2 border-green-200">
+                <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <p class="text-gray-600">Our Cost: <span id="baseTotal" class="font-medium text-gray-600">$0.00</span></p>
+                        <p class="text-gray-600 text-xl font-bold">Your GP: <span id="markupTotal" class="font-medium text-green-600 text-2xl">$0.00</span> 🎯</p>
+                        <p class="text-gray-600">Customer Pays: <span id="finalTotal" class="font-medium text-blue-600">$0.00</span></p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Customer Name</label>
-                        <input type="text" name="customerName" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                        <input type="email" name="email" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" name="phone" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <div class="space-y-2 bg-green-50 p-4 rounded-lg border border-green-300">
+                        <h3 class="font-bold text-green-800">Your GP 📈</h3>
+                        <p class="text-gray-600">This Sale: <span id="potentialGP" class="font-medium text-green-600 text-xl">$0.00</span></p>
+                        <p class="text-sm text-gray-600">* Based on total sales for the month</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Shipping Address -->
+                       <!-- Notes Section -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
-                <textarea name="address" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                <label class="block text-sm font-medium text-gray-700">Additional Notes</label>
+                <textarea name="notes" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
             </div>
 
-            <!-- Quick Markup Section -->
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <label class="block text-sm font-medium text-gray-700">Quick Markup</label>
-                <div class="flex items-center space-x-2">
-                    <input type="number" id="globalMarkup" min="0" value="0"
-                           class="mt-1 block w-32 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <button type="button" id="applyMarkup" 
-                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Apply to All Items</button>
-                </div>
+            <!-- Form Actions -->
+            <div class="flex space-x-4">
+                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">Generate Order</button>
+                <div id="downloadContainer"></div>
             </div>
-             <!-- Product Categories -->
-            {% for category, items in catalog.items() %}
-            <div class="border rounded-lg p-4">
-                <h2 class="text-xl font-semibold mb-4">{{ category|replace('_', ' ')|title }}</h2>
-                <!-- Product Grid Headers -->
-                <div class="grid grid-cols-8 gap-4 mb-2 font-medium text-sm text-gray-600">
-                    <div class="col-span-2">Item</div>
-                    <div>SKU</div>
-                    <div class="text-gray-600">Our Cost</div>
-                    <div class="text-green-600">Markup</div>
-                    <div class="text-blue-600">Customer Price</div>
-                    <div class="text-green-600">Your GP</div>
-                    <div>Quantity</div>
-                </div>
+        </form>
+    </div>
+
+    <!-- JavaScript for form functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize form elements
+            const form = document.getElementById('orderForm');
+            const globalMarkupInput = document.getElementById('globalMarkup');
+            const applyMarkupButton = document.getElementById('applyMarkup');
+            
+            // Handle shipping cost changes
+            const shippingCostInput = document.querySelector('.shipping-cost-input');
+            if (shippingCostInput) {
+                shippingCostInput.addEventListener('input', function() {
+                    const row = this.closest('.product-row');
+                    const markupInput = row.querySelector('.markup-input');
+                    markupInput.dataset.basePrice = this.value || 0;
+                    updateMarkupTotal(row);
+                    updateTotals();
+                });
+            }
+            
+            // Prevent form submission on Enter key
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.target.type !== 'textarea') {
+                    e.preventDefault();
+                }
+            });
+            
+            // Handle global markup application
+            applyMarkupButton.addEventListener('click', function() {
+                const markupValue = parseFloat(globalMarkupInput.value) || 0;
+                document.querySelectorAll('.markup-input').forEach(input => {
+                    input.value = markupValue;
+                    updateMarkupTotal(input.closest('.product-row'));
+                });
+                updateTotals();
+            });
+            
+            // Handle input changes
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('markup-input') || 
+                    e.target.classList.contains('quantity-input')) {
+                    updateMarkupTotal(e.target.closest('.product-row'));
+                    updateTotals();
+                }
+            });
+            
+            // Calculate totals for a single row
+            function updateMarkupTotal(row) {
+                if (!row) return null;
                 
-                <!-- Product Items -->
-                <div class="space-y-4">
-                    {% for name, details in items.items() recursive %}
-                    {% if details.price is defined %}
-                    <div class="grid grid-cols-8 gap-4 items-center product-row">
-                        <div class="col-span-2">
-                            {{ name }}
-                            {% if details.description %}
-                            <p class="text-sm text-gray-500">{{ details.description }}</p>
-                            {% endif %}
-                            {% if details.capacity %}
-                            <p class="text-sm text-gray-500">Capacity: {{ details.capacity }}</p>
-                            {% endif %}
-                            {% if details.lead_time %}
-                            <p class="text-sm text-blue-500">Lead Time: {{ details.lead_time }}</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <input type="text" placeholder="SKU"
-                                   class="sku-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                        <div class="text-red-600 font-medium our-cost">${{ details.price }}</div>
-                        <div>
-                            <input type="number" min="0" max="100" value="0"
-                                   class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                   data-base-price="{{ details.price }}">
-                        </div>
-                        <div class="customer-price text-blue-600 font-medium">$0.00</div>
-                        <div class="profit-margin text-green-600 font-medium">$0.00</div>
-                        <div>
-                            <input type="number" min="0" value="0"
-                                   class="quantity-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                        {% if details.options %}
-                        <div class="col-span-8 mt-2">
-                            <select class="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="">Select Option</option>
-                                {% for option in details.options %}
-                                <option value="{{ option }}">{{ option }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% else %}
-                    <div class="space-y-4">
-                        <h3 class="font-medium">{{ name }}</h3>
-                        {{ loop(items[name].items()) }}
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
+                let basePrice;
+                const markupInput = row.querySelector('.markup-input');
+                const shippingInput = row.querySelector('.shipping-cost-input');
+                
+                // Handle shipping row differently
+                if (shippingInput) {
+                    basePrice = parseFloat(shippingInput.value) || 0;
+                    markupInput.dataset.basePrice = basePrice;
+                } else {
+                    basePrice = parseFloat(markupInput.dataset.basePrice) || 0;
+                }
+                
+                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                const markup = parseFloat(markupInput.value) || 0;
+                
+                // Calculate prices and GP
+                const customerPrice = basePrice * (1 + markup / 100);
+                const grossProfit = customerPrice - basePrice;
+                
+                // Update display values
+                row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
+                row.querySelector('.profit-margin').textContent = `$${grossProfit.toFixed(2)}`;
+                
+                return {
+                    baseTotal: basePrice * quantity,
+                    grossProfit: grossProfit * quantity,
+                    total: customerPrice * quantity
+                };
+            }
+            
+            // Update all totals in the dashboard
+            function updateTotals() {
+                let totalBase = 0;
+                let totalGP = 0;
+                let finalTotal = 0;
+                
+                document.querySelectorAll('.product-row').forEach(row => {
+                    const totals = updateMarkupTotal(row);
+                    if (totals) {
+                        totalBase += totals.baseTotal;
+                        totalGP += totals.grossProfit;
+                        finalTotal += totals.total;
+                    }
+                });
+                
+                // Update dashboard displays
+                document.getElementById('baseTotal').textContent = `$${totalBase.toFixed(2)}`;
+                document.getElementById('markupTotal').textContent = `$${totalGP.toFixed(2)}`;
+                document.getElementById('finalTotal').textContent = `$${finalTotal.toFixed(2)}`;
+                document.getElementById('potentialGP').textContent = `$${totalGP.toFixed(2)}`;
+            }
+            
+            // Handle form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    customer: {
+                        name: form.querySelector('[name="customerName"]').value.trim(),
+                        email: form.querySelector('[name="email"]').value.trim(),
+                        phone: form.querySelector('[name="phone"]').value.trim(),
+                        address: form.querySelector('[name="address"]').value.trim(),
+                        poNumber: form.querySelector('[name="poNumber"]').value.trim()
+                    },
+                    items: [],
+                    shipping: null,
+                    notes: form.querySelector('[name="notes"]').value.trim()
+                };
+                
+                // Collect item data
+                document.querySelectorAll('.product-row').forEach(row => {
+                    const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                    const shippingInput = row.querySelector('.shipping-cost-input');
+                    
+                    if (shippingInput) {
+                        // Handle shipping data
+                        const shippingCost = parseFloat(shippingInput.value) || 0;
+                        const markup = parseFloat(row.querySelector('.markup-input').value) || 0;
+                        formData.shipping = {
+                            cost: shippingCost,
+                            markup: markup
+                        };
+                    } else if (quantity > 0) {
+                        // Handle regular product data
+                        const nameElement = row.querySelector('.col-span-2');
+                        const skuInput = row.querySelector('.sku-input');
+                        const optionSelect = row.querySelector('select');
+                        const markupInput = row.querySelector('.markup-input');
+                        const basePrice = parseFloat(markupInput.dataset.basePrice);
+                        const markup = parseFloat(markupInput.value) || 0;
+                        
+                        formData.items.push({
+                            name: nameElement.childNodes[0].textContent.trim(),
+                            sku: skuInput ? skuInput.value.trim() : '',
+                            basePrice: basePrice,
+                            markup: markup,
+                            quantity: quantity,
+                            option: optionSelect ? optionSelect.value : null
+                        });
+                    }
+                });
+                
+                // Validate form data
+                if (formData.items.length === 0) {
+                    alert('Please select at least one item with a quantity greater than 0');
+                    return;
+                }
+                
+                try {
+                    // Submit to server
+                    const response = await fetch('/generate-quote', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-            <!-- Simple Shipping Line -->
-            <div class="border rounded-lg p-4">
-                <div class="grid grid-cols-8 gap-4 items-center product-row">
-                    <div class="col-span-2">Shipping</div>
-                    <div>
-                        <input type="text" value="SHIPPING" class="sku-input w-full rounded-md border border-gray-300 bg-gray-100" readonly>
-                    </div>
-                    <div class="text-red-600 font-medium our-cost">
-                        <input type="number" min="0" value="0" 
-                               class="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm shipping-cost-input"
-                               data-base-price="0">
-                    </div>
-                    <div>
-                        <input type="number" min="0" max="100" value="0"
-                               class="markup-input w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                               data-base-price="0">
-                    </div>
-                    <div class="customer-price text-blue-600 font-medium">$0.00</div>
-                    <div class="profit-margin text-green-600 font-medium">$0.00</div>
-                    <div>
-                        <input type="number" value="1" class="quantity-input w-full rounded-md border border-gray-300 bg-gray-100" readonly>
-                    </div>
-                </div>
-            </div>
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const downloadContainer = document.getElementById('downloadContainer');
+                        downloadContainer.innerHTML = `<a href="/download-pdf/${result.order_id}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">Download PDF</a>`;
+                        alert('Order generated successfully!');
+                    } else {
+                        throw new Error(result.error || 'Failed to generate order');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error generating order: ' + error.message);
+                }
+            });
+            
+            // Initialize calculations on page load
+            updateTotals();
+        });
+    </script>
+</body>
+</html>
