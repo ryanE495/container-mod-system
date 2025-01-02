@@ -130,9 +130,8 @@ def generate_pdf(order_id, data):
             quantity = item['quantity']
             description = item.get('description', 'No description available')  # Ensure you have 'description' in each item
             
-            # Calculate the customer's price (base + markup)
-            unit_price = base_price * (1 + markup_percent / 100)
-            line_total = unit_price * quantity
+            # Calculate only base cost for vendor
+            line_total = base_price * quantity
             order_total += line_total
             
             html_content += f"""
