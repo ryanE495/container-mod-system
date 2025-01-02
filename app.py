@@ -115,10 +115,9 @@ def generate_pdf(order_id, data):
                 <tr>
                     <th>SKU</th>
                     <th>Item</th>
-                    <th>Description</th>
                     <th>Quantity</th>
-                    <th>Unit Cost</th>
-                    <th>Total Cost</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
                 </tr>
         """
         
@@ -128,31 +127,19 @@ def generate_pdf(order_id, data):
             base_price = item['basePrice']
             markup_percent = item['markup']
             quantity = item['quantity']
-            description = item.get('description', 'No description available')  # Ensure you have 'description' in each item
             
-            # Calculate only base cost for vendor
-            line_total = base_price * quantity
+            # Calculate the customer's price (base + markup)
+            unit_price = base_price * (1 + markup_percent / 100)
+            line_total = unit_price * quantity
             order_total += line_total
             
             html_content += f"""
                 <tr>
                     <td>{item.get('sku', 'N/A')}</td>
                     <td>{item['name']}</td>
-                    <td>{description}</td>
                     <td>{quantity}</td>
                     <td>${unit_price:.2f}</td>
                     <td>${line_total:.2f}</td>
-                </tr>
-            """
-        
-        # Include shipping costs if present
-        if 'shipping' in data:
-            shipping_cost = data['shipping']['cost']
-            order_total += shipping_cost
-            html_content += f"""
-                <tr>
-                    <td colspan="5">Shipping</td>
-                    <td>${shipping_cost:.2f}</td>
                 </tr>
             """
 
