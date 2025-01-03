@@ -30,51 +30,66 @@ except Exception as e:
     print(f"Error configuring pdfkit: {str(e)}")
     pdfkit_config = None
 
-def find_product_description(item_name):
+def find_product_description(item_name, selected_option=None):
     """
     Search through the PRODUCT_CATALOG to find the description for a given item name.
     Returns the description or a default message if not found.
     """
+    base_description = ""
+    
     # For roll-up doors in "Ready to Ship"
     if "Roll Up Door" in item_name:
-        return "Includes weld in frame, threshold, brush seal, slide lock"
-
+        base_description = "Includes weld in frame, threshold, brush seal, slide lock"
+    
     # For windows
-    if "No Bars" in item_name or "With Bars" in item_name:
-        return "With weld-in frame"
-
+    elif "No Bars" in item_name or "With Bars" in item_name:
+        base_description = "With weld-in frame"
+    
     # Search through the catalog
-    for category, items in PRODUCT_CATALOG.items():
-        if category == 'windows':
-            for window_type, options in items.items():
-                if item_name in options:
-                    return options[item_name].get('description', 'With weld-in frame')
-        
-        if category == 'vents':
-            if item_name in items:
-                return items[item_name].get('description', '')
-        
-        if category == 'ramps':
-            if item_name in items:
-                desc = items[item_name].get('description', '')
-                capacity = items[item_name].get('capacity', '')
-                if desc and capacity:
-                    return f"{desc} - Capacity: {capacity}"
-                return desc or capacity
-        
-        if category == 'weld_and_go_doors':
-            if item_name in items:
-                return items[item_name].get('description', '')
+    else:
+        for category, items in PRODUCT_CATALOG.items():
+            if category == 'windows':
+                for window_type, options in items.items():
+                    if item_name in options:
+                        base_description = options[item_name].get('description', 'With weld-in frame')
+                        break
+            
+            elif category == 'vents':
+                if item_name in items:
+                    base_description = items[item_name].get('description', '')
+                    break
+            
+            elif category == 'ramps':
+                if item_name in items:
+                    desc = items[item_name].get('description', '')
+                    capacity = items[item_name].get('capacity', '')
+                    if desc and capacity:
+                        base_description = f"{desc} - Capacity: {capacity}"
+                    else:
+                        base_description = desc or capacity
+                    break
+            
+            elif category == 'weld_and_go_doors':
+                if item_name in items:
+                    base_description = items[item_name].get('description', '')
+                    break
+    
+    # Special cases if no description found yet
+    if not base_description:
+        if "Shelf Brackets" in item_name:
+            base_description = "Heavy-duty steel shelf mounting brackets"
+        elif any(shelter_size in item_name for shelter_size in ["20'(L)", "40'(L)"]):
+            base_description = "Container shelter with galvanized steel frame and heavy-duty tarp cover"
+        elif "Container Caster Wheels" in item_name:
+            base_description = "11,000 lbs capacity (set of 4)"
+        else:
+            base_description = "Standard configuration"
 
-    # Special cases
-    if "Shelf Brackets" in item_name:
-        return "Heavy-duty steel shelf mounting brackets"
-    if any(shelter_size in item_name for shelter_size in ["20'(L)", "40'(L)"]):
-        return "Container shelter with galvanized steel frame and heavy-duty tarp cover"
-    if "Container Caster Wheels" in item_name:
-        return "11,000 lbs capacity (set of 4)"
+    # Add selected option to description if provided
+    if selected_option:
+        base_description = f"{base_description} - {selected_option}"
 
-    return "Standard configuration"
+    return base_description
 
 @app.route('/')
 def index():
@@ -172,14 +187,13 @@ def generate_pdf(order_id, data):
         order_total = 0
         
         for item in data.get('items', []):
-            base_price = item.get('basePrice', 0)
-            markup_percent = item.get('markup', 0)
+            base_price = item.get('basePrice', 0)  # Use base price instead of marked-up price
             quantity = item.get('quantity', 0)
-            description = find_product_description(item.get('name', ''))
+            selected_option = item.get('selectedOption', '')  # Get the selected option if available
+            description = find_product_description(item.get('name', ''), selected_option)
             
-            # Calculate the customer's price (base + markup)
-            unit_price = base_price * (1 + markup_percent / 100)
-            line_total = unit_price * quantity
+            # Calculate total without markup
+            line_total = base_price * quantity
             order_total += line_total
             
             html_content += f"""
@@ -188,7 +202,7 @@ def generate_pdf(order_id, data):
                     <td>{item.get('name', '')}</td>
                     <td>{description}</td>
                     <td>{quantity}</td>
-                    <td>${unit_price:.2f}</td>
+                    <td>${base_price:.2f}</td>
                     <td>${line_total:.2f}</td>
                 </tr>
             """
