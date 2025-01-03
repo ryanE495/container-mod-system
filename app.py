@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import json
+import os
 import pdfkit
 import platform
 from flask import Flask, render_template, request, jsonify, send_file
@@ -15,16 +16,69 @@ app = Flask(__name__)
 
 # Configure pdfkit for both local and Render environments
 if platform.system() == 'Windows':
+    STORAGE_PATH = os.path.join(os.getcwd(), 'storage')
     WKHTMLTOPDF_PATH = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
 else:
     # Path for Render/Linux
     WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
 
+# Create storage directories
+os.makedirs(os.path.join(STORAGE_PATH, 'pdfs'), exist_ok=True)
+os.makedirs(os.path.join(STORAGE_PATH, 'orders'), exist_ok=True)
+
+# Configure pdfkit
 try:
     pdfkit_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
 except Exception as e:
     print(f"Error configuring pdfkit: {str(e)}")
     pdfkit_config = None
+
+app = Flask(__name__)
+
+def find_product_description(item_name):
+    """
+    Search through the PRODUCT_CATALOG to find the description for a given item name.
+    Returns the description or a default message if not found.
+    """
+    # Helper function to search nested dictionaries
+    def search_dict(d):
+        for key, value in d.items():
+            if key == item_name:
+                if isinstance(value, dict):
+                    if 'description' in value:
+                        return value['description']
+                    elif 'price' in value:  # Some items only have price
+                        base_desc = f"{key}"
+                        if 'capacity' in value:
+                            base_desc += f" - Capacity: {value['capacity']}"
+                        if 'lead_time' in value:
+                            base_desc += f" - Lead Time: {value['lead_time']}"
+                        return base_desc
+                    return "Standard configuration"
+                return "Standard configuration"
+            elif isinstance(value, dict):
+                result = search_dict(value)
+                if result:
+                    return result
+        return None
+
+    # Search through each category in the catalog
+    for category, items in PRODUCT_CATALOG.items():
+        description = search_dict(items)
+        if description:
+            return description
+
+    # For roll-up doors in "Ready to Ship"
+    if "Roll Up Door" in item_name:
+        return "Includes weld in frame, threshold, brush seal, slide lock"
+    
+    # Special cases for common items
+    if "Shelf Brackets" in item_name:
+        return "Heavy-duty steel shelf mounting brackets"
+    if any(shelter_size in item_name for shelter_size in ["20'(L)", "40'(L)"]):
+        return "Container shelter with galvanized steel frame and heavy-duty tarp cover"
+
+    return "Standard configuration"
 
 @app.route('/')
 def index():
