@@ -30,66 +30,56 @@ except Exception as e:
     print(f"Error configuring pdfkit: {str(e)}")
     pdfkit_config = None
 
-def find_product_description(item_name, selected_option=None):
+def find_product_description(item_name, door_option=None):
     """
     Search through the PRODUCT_CATALOG to find the description for a given item name.
     Returns the description or a default message if not found.
     """
     base_description = ""
     
-    # For roll-up doors in "Ready to Ship"
+    # For Man Door Kit
+    if "Man Door Kit" in item_name:
+        base_description = PRODUCT_CATALOG['weld_and_go_doors'][item_name]['description']
+        if door_option:
+            base_description += f" - {door_option}"
+        return base_description
+
+    # For roll-up doors
     if "Roll Up Door" in item_name:
-        base_description = "Includes weld in frame, threshold, brush seal, slide lock"
-    
+        return "Includes weld in frame, threshold, brush seal, slide lock"
+
     # For windows
-    elif "No Bars" in item_name or "With Bars" in item_name:
-        base_description = "With weld-in frame"
-    
-    # Search through the catalog
-    else:
-        for category, items in PRODUCT_CATALOG.items():
-            if category == 'windows':
-                for window_type, options in items.items():
-                    if item_name in options:
-                        base_description = options[item_name].get('description', 'With weld-in frame')
-                        break
-            
-            elif category == 'vents':
-                if item_name in items:
-                    base_description = items[item_name].get('description', '')
-                    break
-            
-            elif category == 'ramps':
-                if item_name in items:
-                    desc = items[item_name].get('description', '')
-                    capacity = items[item_name].get('capacity', '')
-                    if desc and capacity:
-                        base_description = f"{desc} - Capacity: {capacity}"
-                    else:
-                        base_description = desc or capacity
-                    break
-            
-            elif category == 'weld_and_go_doors':
-                if item_name in items:
-                    base_description = items[item_name].get('description', '')
-                    break
-    
-    # Special cases if no description found yet
-    if not base_description:
-        if "Shelf Brackets" in item_name:
-            base_description = "Heavy-duty steel shelf mounting brackets"
-        elif any(shelter_size in item_name for shelter_size in ["20'(L)", "40'(L)"]):
-            base_description = "Container shelter with galvanized steel frame and heavy-duty tarp cover"
-        elif "Container Caster Wheels" in item_name:
-            base_description = "11,000 lbs capacity (set of 4)"
-        else:
-            base_description = "Standard configuration"
+    if "No Bars" in item_name or "With Bars" in item_name:
+        return "With weld-in frame"
 
-    # Add selected option to description if provided
-    if selected_option:
-        base_description = f"{base_description} - {selected_option}"
+    # Search through the catalog for other items
+    for category, items in PRODUCT_CATALOG.items():
+        if category == 'windows':
+            for window_type, options in items.items():
+                if item_name in options:
+                    return options[item_name].get('description', 'With weld-in frame')
+        
+        elif category == 'vents':
+            if item_name in items:
+                return items[item_name].get('description', '')
+        
+        elif category == 'ramps':
+            if item_name in items:
+                desc = items[item_name].get('description', '')
+                capacity = items[item_name].get('capacity', '')
+                if desc and capacity:
+                    return f"{desc} - Capacity: {capacity}"
+                return desc or capacity
 
-    return base_description
+    # Special cases
+    if "Shelf Brackets" in item_name:
+        return "Heavy-duty steel shelf mounting brackets"
+    if any(shelter_size in item_name for shelter_size in ["20'(L)", "40'(L)"]):
+        return "Container shelter with galvanized steel frame and heavy-duty tarp cover"
+    if "Container Caster Wheels" in item_name:
+        return "11,000 lbs capacity (set of 4)"
+
+    return base_description or "Standard configuration"
 
 @app.route('/')
 def index():
@@ -98,10 +88,7 @@ def index():
 @app.route('/generate-quote', methods=['POST'])
 def generate_quote():
     try:
-        print("Starting quote generation...")
-        
         if not request.is_json:
-            print("Error: Request does not contain JSON data")
             return jsonify({
                 'success': False,
                 'error': 'Request must be JSON'
@@ -111,10 +98,7 @@ def generate_quote():
         print(f"Received data: {data}")
         
         order_id = save_order(data)
-        print(f"Order saved with ID: {order_id}")
-        
         pdf_path = generate_pdf(order_id, data)
-        print(f"PDF generated at: {pdf_path}")
         
         if os.path.exists(pdf_path):
             return jsonify({
@@ -123,7 +107,6 @@ def generate_quote():
                 'message': 'PDF generated successfully'
             })
         else:
-            print("Error: PDF file not created")
             return jsonify({
                 'success': False,
                 'error': 'PDF generation failed'
@@ -187,10 +170,10 @@ def generate_pdf(order_id, data):
         order_total = 0
         
         for item in data.get('items', []):
-            base_price = item.get('basePrice', 0)  # Use base price instead of marked-up price
+            base_price = item.get('basePrice', 0)
             quantity = item.get('quantity', 0)
-            selected_option = item.get('selectedOption', '')  # Get the selected option if available
-            description = find_product_description(item.get('name', ''), selected_option)
+            door_option = item.get('doorOption', '')  # Get door option if available
+            description = find_product_description(item.get('name', ''), door_option)
             
             # Calculate total without markup
             line_total = base_price * quantity
