@@ -67,9 +67,7 @@
                     <div class="text-blue-600">Customer Price</div>
                     <div class="text-green-600">Your GP</div>
                     <div>Quantity</div>
-                </div>
-                
-                <!-- Product Items -->
+                </div><!-- Product Items -->
                 <div class="space-y-4">
                     {% for name, details in items.items() recursive %}
                     {% if details.price is defined %}
@@ -147,9 +145,7 @@
                         <input type="number" value="1" class="quantity-input w-full rounded-md border border-gray-300 bg-gray-100" readonly>
                     </div>
                 </div>
-            </div>
-
-            <!-- Sales Dashboard -->
+            </div><!-- Sales Dashboard -->
             <div class="bg-gray-50 p-6 rounded-lg border-2 border-green-200">
                 <h2 class="text-xl font-bold mb-4 text-green-800">💰 Your Sales Dashboard 💰</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -240,12 +236,14 @@
                     basePrice = parseFloat(markupInput.dataset.basePrice) || 0;
                 }
                 
-                const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+                const quantity = parseInt(row.querySelector('.quantity-input').value) ||0;
                 const markup = parseFloat(markupInput.value) || 0;
                 
-                const customerPrice = basePrice;  // Use base price without markup for display
-                const grossProfit = (basePrice * (1 + markup / 100)) - basePrice;
+                // Calculate the marked-up price for display in the form
+                const customerPrice = basePrice * (1 + markup / 100);
+                const grossProfit = customerPrice - basePrice;
                 
+                // Update display values with marked-up price
                 row.querySelector('.customer-price').textContent = `$${customerPrice.toFixed(2)}`;
                 row.querySelector('.profit-margin').textContent = `$${grossProfit.toFixed(2)}`;
                 
@@ -269,13 +267,14 @@
                         finalTotal += totals.total;
                     }
                 });
+                
                 document.getElementById('baseTotal').textContent = `$${totalBase.toFixed(2)}`;
                 document.getElementById('markupTotal').textContent = `$${totalGP.toFixed(2)}`;
                 document.getElementById('finalTotal').textContent = `$${finalTotal.toFixed(2)}`;
                 document.getElementById('potentialGP').textContent = `$${totalGP.toFixed(2)}`;
             }
             
-            // Enhanced form submission handler with door option support
+            // Handle form submission
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -292,7 +291,7 @@
                     notes: form.querySelector('[name="notes"]').value.trim()
                 };
                 
-                // Enhanced item data collection with door options
+                // Collect item data
                 document.querySelectorAll('.product-row').forEach(row => {
                     const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
                     const shippingInput = row.querySelector('.shipping-cost-input');
@@ -314,7 +313,6 @@
                         const basePrice = parseFloat(markupInput.dataset.basePrice);
                         const markup = parseFloat(markupInput.value) || 0;
                         
-                        // Create item data object
                         const itemData = {
                             name: nameElement.childNodes[0].textContent.trim(),
                             sku: skuInput ? skuInput.value.trim() : '',
