@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 import json
-import os
 import pdfkit
 import platform
 from flask import Flask, render_template, request, jsonify, send_file
@@ -10,16 +9,14 @@ from products import PRODUCT_CATALOG
 
 load_dotenv()
 
-# Configure storage path for Render
-STORAGE_PATH = '/opt/render/project/src/orders'
 app = Flask(__name__)
 
-# Configure pdfkit for both local and Render environments
+# Configure storage path for both environments
 if platform.system() == 'Windows':
     STORAGE_PATH = os.path.join(os.getcwd(), 'storage')
     WKHTMLTOPDF_PATH = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
 else:
-    # Path for Render/Linux
+    STORAGE_PATH = '/opt/render/project/src/storage'  # For Render deployment
     WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
 
 # Create storage directories
@@ -33,50 +30,49 @@ except Exception as e:
     print(f"Error configuring pdfkit: {str(e)}")
     pdfkit_config = None
 
-app = Flask(__name__)
-
 def find_product_description(item_name):
     """
     Search through the PRODUCT_CATALOG to find the description for a given item name.
     Returns the description or a default message if not found.
     """
-    # Helper function to search nested dictionaries
-    def search_dict(d):
-        for key, value in d.items():
-            if key == item_name:
-                if isinstance(value, dict):
-                    if 'description' in value:
-                        return value['description']
-                    elif 'price' in value:  # Some items only have price
-                        base_desc = f"{key}"
-                        if 'capacity' in value:
-                            base_desc += f" - Capacity: {value['capacity']}"
-                        if 'lead_time' in value:
-                            base_desc += f" - Lead Time: {value['lead_time']}"
-                        return base_desc
-                    return "Standard configuration"
-                return "Standard configuration"
-            elif isinstance(value, dict):
-                result = search_dict(value)
-                if result:
-                    return result
-        return None
-
-    # Search through each category in the catalog
-    for category, items in PRODUCT_CATALOG.items():
-        description = search_dict(items)
-        if description:
-            return description
-
     # For roll-up doors in "Ready to Ship"
     if "Roll Up Door" in item_name:
         return "Includes weld in frame, threshold, brush seal, slide lock"
-    
-    # Special cases for common items
+
+    # For windows
+    if "No Bars" in item_name or "With Bars" in item_name:
+        return "With weld-in frame"
+
+    # Search through the catalog
+    for category, items in PRODUCT_CATALOG.items():
+        if category == 'windows':
+            for window_type, options in items.items():
+                if item_name in options:
+                    return options[item_name].get('description', 'With weld-in frame')
+        
+        if category == 'vents':
+            if item_name in items:
+                return items[item_name].get('description', '')
+        
+        if category == 'ramps':
+            if item_name in items:
+                desc = items[item_name].get('description', '')
+                capacity = items[item_name].get('capacity', '')
+                if desc and capacity:
+                    return f"{desc} - Capacity: {capacity}"
+                return desc or capacity
+        
+        if category == 'weld_and_go_doors':
+            if item_name in items:
+                return items[item_name].get('description', '')
+
+    # Special cases
     if "Shelf Brackets" in item_name:
         return "Heavy-duty steel shelf mounting brackets"
     if any(shelter_size in item_name for shelter_size in ["20'(L)", "40'(L)"]):
         return "Container shelter with galvanized steel frame and heavy-duty tarp cover"
+    if "Container Caster Wheels" in item_name:
+        return "11,000 lbs capacity (set of 4)"
 
     return "Standard configuration"
 
@@ -98,9 +94,6 @@ def generate_quote():
             
         data = request.json
         print(f"Received data: {data}")
-        
-        os.makedirs(os.path.join(STORAGE_PATH, 'pdfs'), exist_ok=True)
-        os.makedirs(os.path.join(STORAGE_PATH, 'orders'), exist_ok=True)
         
         order_id = save_order(data)
         print(f"Order saved with ID: {order_id}")
@@ -129,7 +122,7 @@ def generate_quote():
         }), 500
 
 def save_order(data):
-    order_id = data['customer']['poNumber'] or datetime.now().strftime('%Y%m%d_%H%M%S')
+    order_id = data.get('customer', {}).get('poNumber') or datetime.now().strftime('%Y%m%d_%H%M%S')
     json_path = os.path.join(STORAGE_PATH, 'orders', f'order_{order_id}.json')
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
@@ -152,16 +145,16 @@ def generate_pdf(order_id, data):
         </head>
         <body>
             <div class="header">
-                <h1>Purchase Order #{data['customer']['poNumber']}</h1>
+                <h1>Purchase Order #{data.get('customer', {}).get('poNumber', '')}</h1>
                 <p>Date: {datetime.now().strftime('%Y-%m-%d')}</p>
             </div>
             
             <div class="order-info">
                 <h3>Customer Information</h3>
-                <p>Name: {data['customer']['name']}</p>
-                <p>Email: {data['customer']['email']}</p>
-                <p>Phone: {data['customer']['phone']}</p>
-                <p>Address: {data['customer']['address']}</p>
+                <p>Name: {data.get('customer', {}).get('name', '')}</p>
+                <p>Email: {data.get('customer', {}).get('email', '')}</p>
+                <p>Phone: {data.get('customer', {}).get('phone', '')}</p>
+                <p>Address: {data.get('customer', {}).get('address', '')}</p>
             </div>
 
             <h3>Order Details</h3>
@@ -178,11 +171,11 @@ def generate_pdf(order_id, data):
         
         order_total = 0
         
-        for item in data['items']:
-            base_price = item['basePrice']
-            markup_percent = item['markup']
-            quantity = item['quantity']
-            description = item.get('description', 'No description available')  # Ensure you have 'description' in each item
+        for item in data.get('items', []):
+            base_price = item.get('basePrice', 0)
+            markup_percent = item.get('markup', 0)
+            quantity = item.get('quantity', 0)
+            description = find_product_description(item.get('name', ''))
             
             # Calculate the customer's price (base + markup)
             unit_price = base_price * (1 + markup_percent / 100)
@@ -192,7 +185,7 @@ def generate_pdf(order_id, data):
             html_content += f"""
                 <tr>
                     <td>{item.get('sku', 'N/A')}</td>
-                    <td>{item['name']}</td>
+                    <td>{item.get('name', '')}</td>
                     <td>{description}</td>
                     <td>{quantity}</td>
                     <td>${unit_price:.2f}</td>
@@ -201,8 +194,8 @@ def generate_pdf(order_id, data):
             """
         
         # Include shipping costs if present
-        if 'shipping' in data:
-            shipping_cost = data['shipping']['cost']
+        shipping_cost = data.get('shipping', {}).get('cost', 0)
+        if shipping_cost:
             order_total += shipping_cost
             html_content += f"""
                 <tr>
